@@ -1,0 +1,90 @@
+{
+ "actualizado": "2026-11-14 23:01",
+ "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
+ "partidos": [
+  {
+   "ts": 1794735000,
+   "fecha": "15/11/2026",
+   "hora": "10:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "PENGUINS BASKETBALL CLUB",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "398687",
+   "buscar": "serracines",
+   "skip": 50
+  },
+  {
+   "ts": 1794742200,
+   "fecha": "15/11/2026",
+   "hora": "12:30",
+   "local": "COSLADA C.B. PLS SERRACINES",
+   "visit": "LOPE DE VEGA C.D.",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "399067",
+   "buscar": "serracines",
+   "skip": 50
+  },
+  {
+   "ts": 1794751200,
+   "fecha": "15/11/2026",
+   "hora": "15:00",
+   "local": "CHIRIBITA MADRID ELITE BASKETBALL",
+   "visit": "COSLADA C.B.",
+   "campo": "CHAMARTIN, C.D.M.",
+   "categoria": "2ª Div Aut Fem ORO",
+   "notif": "389835",
+   "buscar": "coslada",
+   "skip": 600
+  },
+  {
+   "ts": 1794762000,
+   "fecha": "15/11/2026",
+   "hora": "18:00",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "BASKET HOYO DE MANZANARES",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Fem ORO",
+   "notif": "389749",
+   "buscar": "serracines",
+   "skip": 50
+  },
+  {
+   "ts": 1794769200,
+   "fecha": "15/11/2026",
+   "hora": "20:00",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "UROS DE RIVAS",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Liga Ginos Masculina PLATA",
+   "notif": "382235",
+   "buscar": "serracines",
+   "skip": 50
+  },
+  {
+   "ts": 1794861000,
+   "fecha": "16/11/2026",
+   "hora": "21:30",
+   "local": "SERRACINES FEMENINO",
+   "visit": "IN BLACK",
+   "campo": "EST. LAS TABLAS 1",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "406650",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795035600,
+   "fecha": "18/11/2026",
+   "hora": "22:00",
+   "local": "LA TRIBU / VISIT JORDANIA",
+   "visit": "SERRACINES MASCULINO A",
+   "campo": "ESCUELA IDEO P2",
+   "categoria": "FreeBasket O35 Masculina",
+   "notif": "406513",
+   "buscar": "serracines",
+   "skip": 100
+  }
+ ]
+}
