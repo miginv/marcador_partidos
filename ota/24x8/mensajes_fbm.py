@@ -1,8 +1,8 @@
 # Modo mensajes del marcador 24x8: reloj y API HTTP tipo Awtrix (/api/notify, /api/custom,
 # /api/settings, /api/reboot, /api/scoreboard) mientras no haya partido. Cada minuto mira
 # la lista; 15 min antes de un partido reinicia en modo marcador (modo_fbm).
-# Textos de hasta 16 px se quedan fijos y centrados; los mas anchos pasan en scroll.
-# Todo sin bloquear: entre fotograma y fotograma se atienden las peticiones.
+# Los mensajes se pintan con el codigo de la Awtrix (awtrix24: icono 8 px + texto, scroll
+# si el texto ocupa mas de 12 px). Mientras se muestra uno, las peticiones esperan.
 import gc
 import json
 import socket
@@ -11,13 +11,10 @@ import machine
 import network
 import modo_fbm
 import my_display
+import awtrix24
 import my_shared
 
-MAX_FIJO = 16               # px: hasta aqui texto fijo, mas ancho en scroll
 COLA_MAX = 10
-PASO_MS = 50                # ms por paso si no llega "scrollspeed" (como la Awtrix)
-FIJO_SEG = 4                # texto fijo: 4 s por repeticion (como la Awtrix)
-COLOR_RELOJ = (255, 255, 255)   # blanco, como el reloj de la Awtrix
 REVISAR_SEG = 60
 DESCARGA_SEG = 15 * 60
 REFRESCO_SEG = 3600         # sin lista nueva en 1 h: reinicio y se baja al arrancar
@@ -27,9 +24,6 @@ _sta = network.WLAN(network.STA_IF)
 _cola = []
 _t = {"rev": 0, "desc": 0, "ok": 0, "ota": 0}
 _hora_ok = False
-_ACENTOS = {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u", "ñ": "n",
-            "°": "º", "Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U", "Ü": "U", "Ñ": "N"}
-
 
 # ---------- hora ----------
 
@@ -55,94 +49,25 @@ def _sync_hora():
         print("[NTP] fallo:", e)
 
 
-# ---------- pantalla ----------
+# ---------- pantalla: mismo codigo que la Awtrix (awtrix24) ----------
 
-def _limpia(txt):
-    return "".join(_ACENTOS.get(c, c) for c in str(txt))
-
-
-def _ancho(txt):
-    return sum(my_display._ancho_scroll(c) + 1 for c in txt) - 1 if txt else 0
-
-
-def _pinta(txt, x, color):
-    my_display.fb.fill(0)
-    for c in txt:
-        my_display.draw_char_at_position(c, x, 3)
-        x += my_display._ancho_scroll(c) + 1
-    my_display.show_framebuffer(color)
-
-
-def _color(c, defecto=(255, 255, 255)):
-    try:
-        if isinstance(c, str):
-            c = c.lstrip("#")
-            return (int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16))
-        return (int(c[0]), int(c[1]), int(c[2]))
-    except Exception:
-        return defecto
-
-
-class _Mensaje:
-    """Un mensaje en pantalla; paso() dibuja un fotograma y dice si sigue."""
-
-    def __init__(self, p):
-        txt = _limpia(p.get("text", ""))
-        if p.get("textCase") == 1:              # como la Awtrix: 1 minusculas, 2 mayusculas,
-            txt = txt.lower()                   # cualquier otro valor tal cual
-        elif p.get("textCase") == 2:
-            txt = txt.upper()
-        self.txt = txt
-        self.color = _color(p.get("color"))
-        self.w = _ancho(txt)
-        self.scroll = self.w > MAX_FIJO
-        try:
-            self.paso_ms = max(10, min(500, int(p.get("scrollspeed", p.get("scrollSpeed", PASO_MS)))))
-        except (TypeError, ValueError):
-            self.paso_ms = PASO_MS
-        try:
-            self.vueltas = max(1, min(8, int(p.get("repeat", 1))))
-        except (TypeError, ValueError):
-            self.vueltas = 1
-        dur = p.get("duration") or FIJO_SEG * self.vueltas
-        self.fin = time.ticks_add(time.ticks_ms(), int(dur) * 1000)
-        self.k = 0
-        self.prox = time.ticks_ms()
-
-    def paso(self):
-        if time.ticks_diff(time.ticks_ms(), self.prox) < 0:
-            return True
-        if not self.scroll:
-            if self.k == 0:
-                _pinta(self.txt, (my_display.WIDTH - self.w) // 2, self.color)
-                self.k = 1
-            return time.ticks_diff(self.fin, time.ticks_ms()) > 0
-        _pinta(self.txt, my_display.WIDTH - self.k, self.color)
-        self.k += 1
-        self.prox = time.ticks_add(self.prox, self.paso_ms)
-        if self.k > self.w + my_display.WIDTH:
-            self.k = 0
-            self.vueltas -= 1
-        return self.vueltas > 0
+ICONOS_AUTO_POWER = ("858", "2012", "61396", "34394", "1545", "55027", "2422", "32930",
+                     "55274", "8644")
 
 
 def _reloj(estado):
-    """Dibuja HH:MM (dos puntos parpadeando) solo cuando cambia."""
+    """Reloj de la Awtrix, redibujado solo cuando cambia (parpadeo de los dos puntos)."""
     if _hora_ok:
         t = time.time()
         lt = time.localtime(t + _offset_es(t))
-        txt = "%02d%s%02d" % (lt[3], ":" if lt[5] % 2 == 0 else " ", lt[4])
+        clave = (lt[3], lt[4], lt[5] % 2 == 0)
     else:
-        txt = "--:--"
-    if txt != estado.get("reloj"):
-        estado["reloj"] = txt
-        my_display.fb.fill(0)
-        x = (my_display.WIDTH - _ancho(txt.replace(" ", ":"))) // 2
-        for c in txt:
-            if c != " ":
-                my_display.draw_char_at_position(c, x, 3)
-            x += my_display._ancho_scroll(":" if c == " " else c) + 1
-        my_display.show_framebuffer(COLOR_RELOJ)
+        clave = ("--", "--", True)
+    if clave != estado.get("reloj"):
+        estado["reloj"] = clave
+        h, m, sep = clave
+        awtrix24.display_clock_frame(h if isinstance(h, str) else "%02d" % h,
+                                     m if isinstance(m, str) else "%02d" % m, sep)
 
 
 # ---------- HTTP ----------
@@ -274,6 +199,13 @@ except Exception as _e:
     print("[OTA] error:", _e)
 if modo_fbm.descargar():
     print("[MODO] lista descargada")
+if _sta.isconnected():
+    for _ic in ICONOS_AUTO_POWER:
+        try:
+            awtrix24.download_icon(_ic)
+        except Exception as _e:
+            print("[ICONO]", _ic, _e)
+        gc.collect()
 _t["ota"] = _t["ok"] = _t["desc"] = _t["rev"] = time.time()
 gc.collect()
 
@@ -285,9 +217,8 @@ _srv.setblocking(False)
 _ip = _sta.ifconfig()[0] if _sta.isconnected() else ""
 print("[MSG] API Awtrix en", _ip, "puerto 80, libre", gc.mem_free())
 if _ip:
-    _cola.append({"text": _ip, "color": [0, 255, 0], "repeat": 1})
+    _cola.append({"text": _ip, "color": [0, 255, 0], "icon": "32930", "repeat": 1})
 
-_actual = None
 _estado = {}
 while True:
     try:
@@ -297,17 +228,14 @@ while True:
     if cl is not None:
         _atender(cl)
 
-    if _actual is None and _cola:
+    if _cola:
         p = _cola.pop(0)
+        print("[MSG] mostrando, pendientes:", len(_cola))
         if p.get("_type") == "scoreboard":
             _marcador_msg(p)
         else:
-            _actual = _Mensaje(p)
+            awtrix24.process_awtrix(p)
         _estado.clear()
-    if _actual is not None:
-        if not _actual.paso():
-            _actual = None
-            _estado.clear()
     else:
         _reloj(_estado)
         if time.time() - _t["rev"] >= REVISAR_SEG:
@@ -316,4 +244,4 @@ while True:
                 _revisar()
             except Exception as e:
                 print("[MODO] error revisando:", e)
-    time.sleep_ms(10)
+    time.sleep_ms(20)
