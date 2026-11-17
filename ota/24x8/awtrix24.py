@@ -11,6 +11,7 @@ import my_display
 
 WIDTH = 24
 MAX_FIJO = 12
+PAUSA_MS = 2000            # texto en scroll: quieto 2 s al principio
 TEXT_LINE = 1
 GIF_BRIGHTNESS = 0.6
 BLACK_THRESHOLD = 30
@@ -249,7 +250,13 @@ def _process_awtrix(payload):
     last_frame = (None, None)
 
     for _ in range(repeat):
-        frames = range(WIDTH, 7 - t_w, -1) if not is_static else range(40)
+        if is_static:
+            frames = range(40)
+        else:
+            # 24x8: el texto empieza ya pegado a la izquierda (tras el icono), quieto 2 s
+            # para leerlo, y luego hace scroll hacia la izquierda hasta salir
+            x0 = 8 if player else 0
+            frames = [x0] * (PAUSA_MS // max(1, int(speed))) + list(range(x0 - 1, 7 - t_w, -1))
         
         for x_pos in frames:
             fb.fill(0)  # Limpiar framebuffer al inicio de cada frame
