@@ -4,7 +4,6 @@
 # marcador (modo_fbm.actualizar, carpeta ota/32x8 de miginv/marcador_partidos).
 # Con el servidor en marcha no queda RAM para TLS: lista y OTA se bajan al arrancar y,
 # si la lista no se ha podido refrescar en 1 h (o cada 6 h para la OTA), se reinicia.
-import os
 import time
 import modo_fbm
 import my_display
@@ -57,11 +56,6 @@ except Exception as _e:
     print("[OTA] error:", _e)
 if modo_fbm.descargar():
     print("[MODO] lista descargada")
-# Iconos de auto_power ahora, con RAM libre. Con el servidor en marcha no hay RAM para TLS
-# y reintentar la descarga en cada mensaje acababa colgando la placa: solo los ya bajados.
-for _ic in ("858", "2012", "61396", "34394", "1545", "55027", "2422", "32930", "55274", "8644"):
-    my_network.download_icon(_ic)
-my_network.download_icon = lambda i: "{}.gif".format(i) in os.listdir("/ICONS")
 _t["ota"] = _t["ok"] = _t["desc"] = time.time()   # tras el NTP: el reloj ha saltado
 my_display.process_awtrix({
     "text": "{} {} {}".format(my_network.get_ssid(), my_network.get_ip(), my_network.get_hostname()),
