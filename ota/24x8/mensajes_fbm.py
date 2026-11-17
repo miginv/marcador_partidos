@@ -15,9 +15,9 @@ import my_shared
 
 MAX_FIJO = 16               # px: hasta aqui texto fijo, mas ancho en scroll
 COLA_MAX = 10
-PASO_MS = 50                # scroll a velocidad 100 %
-FIJO_SEG = 5                # duracion por defecto de un texto fijo
-COLOR_RELOJ = (0, 150, 255)
+PASO_MS = 50                # ms por paso si no llega "scrollspeed" (como la Awtrix)
+FIJO_SEG = 4                # texto fijo: 4 s por repeticion (como la Awtrix)
+COLOR_RELOJ = (255, 255, 255)   # blanco, como el reloj de la Awtrix
 REVISAR_SEG = 60
 DESCARGA_SEG = 15 * 60
 REFRESCO_SEG = 3600         # sin lista nueva en 1 h: reinicio y se baja al arrancar
@@ -28,7 +28,7 @@ _cola = []
 _t = {"rev": 0, "desc": 0, "ok": 0, "ota": 0}
 _hora_ok = False
 _ACENTOS = {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u", "ñ": "n",
-            "Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U", "Ü": "U", "Ñ": "N"}
+            "°": "º", "Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U", "Ü": "U", "Ñ": "N"}
 
 
 # ---------- hora ----------
@@ -88,17 +88,24 @@ class _Mensaje:
 
     def __init__(self, p):
         txt = _limpia(p.get("text", ""))
-        if p.get("textCase", 0) != 2:           # Awtrix: 0/1 mayusculas, 2 tal cual
+        if p.get("textCase") == 1:              # como la Awtrix: 1 minusculas, 2 mayusculas,
+            txt = txt.lower()                   # cualquier otro valor tal cual
+        elif p.get("textCase") == 2:
             txt = txt.upper()
         self.txt = txt
         self.color = _color(p.get("color"))
         self.w = _ancho(txt)
         self.scroll = self.w > MAX_FIJO
-        vel = max(10, min(200, int(p.get("scrollSpeed", p.get("scrollspeed", 100)) or 100)))
-        self.paso_ms = PASO_MS * 100 // vel
-        self.vueltas = max(1, int(p.get("repeat", 1) or 1))
-        dur = p.get("duration")
-        self.fin = time.ticks_add(time.ticks_ms(), int(dur or FIJO_SEG) * 1000)
+        try:
+            self.paso_ms = max(10, min(500, int(p.get("scrollspeed", p.get("scrollSpeed", PASO_MS)))))
+        except (TypeError, ValueError):
+            self.paso_ms = PASO_MS
+        try:
+            self.vueltas = max(1, min(8, int(p.get("repeat", 1))))
+        except (TypeError, ValueError):
+            self.vueltas = 1
+        dur = p.get("duration") or FIJO_SEG * self.vueltas
+        self.fin = time.ticks_add(time.ticks_ms(), int(dur) * 1000)
         self.k = 0
         self.prox = time.ticks_ms()
 
