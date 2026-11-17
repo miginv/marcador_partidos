@@ -42,8 +42,9 @@ def _frame(*a, **k):
 
 my_display.display_clock_frame = _frame
 
-if not my_network.sta.isconnected():   # boot.py ya ha conectado (o abierto el portal)
-    my_network.connect_wifi()
+if not my_network.sta.isconnected():   # boot.py ya ha conectado; nunca el hotspot "Pantalla"
+    import wifi_portal                 # de la Awtrix (borra las redes): siempre "scoreboard"
+    wifi_portal.asegurar(my_network.get_matrix_id())
 my_network.get_ntp_time_local()
 try:
     modo_fbm.actualizar()
