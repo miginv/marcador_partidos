@@ -221,10 +221,13 @@ def portal(disp):
     pl.register(dns, select.POLLIN)
 
     texto = "WIFI: " + AP_SSID
+    fijo = sum(disp._ancho_scroll(c) + 1 for c in "HOTSPOT") - 1 <= disp.WIDTH
+    if not fijo:                                   # 24x8: no cabe, va tambien en el scroll
+        texto = "HOTSPOT - " + texto
     ancho = sum(disp._ancho_scroll(c) + 1 for c in texto)
     ultimo_uso = time.time()
-    k = 0
-    fase_t = time.ticks_ms()
+    k = 0 if fijo else 1
+    fase_t = time.ticks_add(time.ticks_ms(), 0 if fijo else -3000)
     while True:
         # pantalla sin bloquear: "HOTSPOT" 3 s y luego el nombre de la red en scroll
         fase = time.ticks_diff(time.ticks_ms(), fase_t)
@@ -241,8 +244,8 @@ def portal(disp):
             disp.show_framebuffer((0, 120, 255))
             k += 1
             if k - 1 > ancho + disp.WIDTH:
-                k = 0
-                fase_t = time.ticks_ms()
+                k = 0 if fijo else 1
+                fase_t = time.ticks_add(time.ticks_ms(), 0 if fijo else -3000)
 
         if pl.poll(60):
             # ambos sin bloquear: no depende de que objeto devuelva poll
