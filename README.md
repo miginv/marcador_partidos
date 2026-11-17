@@ -12,3 +12,9 @@ Campos de cada partido:
 - `buscar`, `skip`: término y página de la búsqueda FBM donde está el partido. La placa prueba `skip`, `skip-50` y `skip+50`.
 
 Se genera con `buscar_partidos.py --json partidos.json` (repo smart_scoreboard).
+
+## OTA de los marcadores (`ota/`)
+
+`ota/32x8/` tiene el código de la pantalla Awtrix 32x8. En modo mensajes (sin partido cerca), la placa mira `version.json` al arrancar y cada 6 h. Si la versión es mayor que la instalada (`ota_version.txt` en la placa), baja los ficheros de `files`. Solo los sustituye si han llegado todos, y después se reinicia.
+
+Para publicar un cambio: copia los ficheros aquí y sube `version` (1.0.0 → 1.0.1). Nunca se tocan `config.json` ni `my_shared.py`.

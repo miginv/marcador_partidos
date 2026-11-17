@@ -1,0 +1,13 @@
+{
+ "version": "1.0.0",
+ "files": [
+  "boot.py",
+  "marcador_fbm.py",
+  "marcador_disp.py",
+  "gesdeportiva.py",
+  "modo_fbm.py",
+  "mensajes_fbm.py",
+  "wifi_portal.py",
+  "font_narrow.py"
+ ]
+}
