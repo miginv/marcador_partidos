@@ -8,7 +8,15 @@ import my_shared
 import urandom
 
 # Configuración del pin de datos y número total de LEDs
-pin = machine.Pin(4)
+# Pin de los LED: "led_pin" en config.json (por defecto 4, el de las placas C3)
+try:
+    import json as _jp
+    with open("config.json") as _f:
+        _cfg_led = _jp.load(_f)
+except Exception:
+    _cfg_led = {}
+LED_PIN = int(_cfg_led.get("led_pin", 4))
+pin = machine.Pin(LED_PIN)
 num_matrices = 3
 leds_por_matriz = 64
 total_leds = num_matrices * leds_por_matriz
@@ -89,7 +97,7 @@ try:
     with open("config.json") as _f:
         _spi_on = _json2.load(_f).get("led_spi", True)
     if _spi_on:
-        np = _SpiLeds(total_leds, 4, 7)
+        np = _SpiLeds(total_leds, LED_PIN, int(_cfg_led.get("led_sck", 7)))
 except Exception as _e:
     print("[DISPLAY] SPI no disponible, uso neopixel:", _e)
     np = None
