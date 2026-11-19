@@ -1,7 +1,19 @@
 {
- "actualizado": "2026-11-19 18:51",
+ "actualizado": "2026-11-19 19:14",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
+  {
+   "ts": 1795202100,
+   "fecha": "20/11/2026",
+   "hora": "20:15",
+   "local": "SEVERO TORREJON",
+   "visit": "C.B. GETAFE",
+   "campo": "SEVERO OCHOA, C.E.I.P.",
+   "categoria": "Junior Fem. Pref.",
+   "notif": "385095",
+   "buscar": "getafe",
+   "skip": 850
+  },
   {
    "ts": 1795203000,
    "fecha": "20/11/2026",
@@ -13,6 +25,18 @@
    "notif": "391006",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1795203000,
+   "fecha": "20/11/2026",
+   "hora": "20:30",
+   "local": "ALCALA",
+   "visit": "REY JUAN CARLOS",
+   "campo": "UNIVERSIDAD ALCALA, PABELLON",
+   "categoria": "Universitaria Masculina",
+   "notif": "380641",
+   "buscar": "alcala",
+   "skip": 1450
   }
  ]
 }
