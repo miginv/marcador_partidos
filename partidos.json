@@ -1,52 +1,16 @@
 {
- "actualizado": "2026-11-17 09:46",
+ "actualizado": "2026-11-19 18:51",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
-   "ts": 1794945900,
-   "fecha": "17/11/2026",
-   "hora": "21:05",
-   "local": "LA YAKUZA",
-   "visit": "VILLA DE VALLEKAS VETERANOS",
-   "campo": "CAJA MAGICA 2",
-   "categoria": "FreeBasket O35 Masculina",
-   "notif": "406497",
-   "buscar": "veteranos",
-   "skip": 0
-  },
-  {
-   "ts": 1795019400,
-   "fecha": "18/11/2026",
-   "hora": "17:30",
-   "local": "GSD BALONCESTO ALCALA \"B\"",
-   "visit": "GSD BALONCESTO ALCALA \"A\"",
-   "campo": "GREDOS SAN DIEGO ALCALA, COLEGIO (Techado)",
-   "categoria": "Benj F.1ºaño LIGA MARCO ALDANY",
-   "notif": "395446",
-   "buscar": "alcala",
-   "skip": 1450
-  },
-  {
-   "ts": 1795028400,
-   "fecha": "18/11/2026",
-   "hora": "20:00",
-   "local": "CB ARGANZUELA CENTRO VETERANOS",
-   "visit": "HIPERDESGUACE",
-   "campo": "CAJA MAGICA 1",
-   "categoria": "FreeBasket O35 Masculina",
-   "notif": "406521",
-   "buscar": "veteranos",
-   "skip": 0
-  },
-  {
-   "ts": 1795035600,
-   "fecha": "18/11/2026",
-   "hora": "22:00",
-   "local": "LA TRIBU / VISIT JORDANIA",
-   "visit": "SERRACINES MASCULINO A",
-   "campo": "ESCUELA IDEO P2",
-   "categoria": "FreeBasket O35 Masculina",
-   "notif": "406513",
+   "ts": 1795203000,
+   "fecha": "20/11/2026",
+   "hora": "20:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "BALONCESTO SVP A",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Sub 22 Masc. PLATA",
+   "notif": "391006",
    "buscar": "serracines",
    "skip": 100
   }
