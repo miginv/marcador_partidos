@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-19 19:14",
+ "actualizado": "2026-11-20 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
@@ -37,6 +37,78 @@
    "notif": "380641",
    "buscar": "alcala",
    "skip": 1450
+  },
+  {
+   "ts": 1795248900,
+   "fecha": "21/11/2026",
+   "hora": "09:15",
+   "local": "FUNDAL ALCOBENDAS \"B\"",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "ANTELA PARADA, PABELLON PISTA 1",
+   "categoria": "Alv Mas 2ºaño LIGA MARCO ALDANY - ORO",
+   "notif": "394184",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795275000,
+   "fecha": "21/11/2026",
+   "hora": "16:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "MOSTOLES BASKET VESTAL REFORMAS",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Alv Fem 2ºaño LIGA MARCO ALDANY - PLATA",
+   "notif": "395565",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795275000,
+   "fecha": "21/11/2026",
+   "hora": "16:30",
+   "local": "IRLANDESAS 2",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "IRLANDESAS, COLEGIO (Semicubierto)",
+   "categoria": "Cadete Fem. Pref.",
+   "notif": "391552",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795281300,
+   "fecha": "21/11/2026",
+   "hora": "18:15",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "CB VILLA DE LEGANÉS",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Infantil Fem. Pref.",
+   "notif": "404436",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795287600,
+   "fecha": "21/11/2026",
+   "hora": "20:00",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "COLEGIO EL PRADO",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Junior Masc. Pref.",
+   "notif": "378663",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795287600,
+   "fecha": "21/11/2026",
+   "hora": "20:00",
+   "local": "MOVISTAR ESTUDIANTES ARRANZ",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "LA CAJA MAGICA INDOOR NORTE Pista 5",
+   "categoria": "Cadete Masc. Pref.",
+   "notif": "390561",
+   "buscar": "serracines",
+   "skip": 100
   }
  ]
 }
