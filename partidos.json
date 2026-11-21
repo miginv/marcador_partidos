@@ -1,55 +1,7 @@
 {
- "actualizado": "2026-11-20 13:00",
+ "actualizado": "2026-11-21 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795202100,
-   "fecha": "20/11/2026",
-   "hora": "20:15",
-   "local": "SEVERO TORREJON",
-   "visit": "C.B. GETAFE",
-   "campo": "SEVERO OCHOA, C.E.I.P.",
-   "categoria": "Junior Fem. Pref.",
-   "notif": "385095",
-   "buscar": "getafe",
-   "skip": 850
-  },
-  {
-   "ts": 1795203000,
-   "fecha": "20/11/2026",
-   "hora": "20:30",
-   "local": "COSLADA C.B. SERRACINES",
-   "visit": "BALONCESTO SVP A",
-   "campo": "C.E.I.P. SERRACINES, PABELLON",
-   "categoria": "Sub 22 Masc. PLATA",
-   "notif": "391006",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795203000,
-   "fecha": "20/11/2026",
-   "hora": "20:30",
-   "local": "ALCALA",
-   "visit": "REY JUAN CARLOS",
-   "campo": "UNIVERSIDAD ALCALA, PABELLON",
-   "categoria": "Universitaria Masculina",
-   "notif": "380641",
-   "buscar": "alcala",
-   "skip": 1450
-  },
-  {
-   "ts": 1795248900,
-   "fecha": "21/11/2026",
-   "hora": "09:15",
-   "local": "FUNDAL ALCOBENDAS \"B\"",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "ANTELA PARADA, PABELLON PISTA 1",
-   "categoria": "Alv Mas 2ºaño LIGA MARCO ALDANY - ORO",
-   "notif": "394184",
-   "buscar": "serracines",
-   "skip": 100
-  },
   {
    "ts": 1795275000,
    "fecha": "21/11/2026",
@@ -107,6 +59,66 @@
    "campo": "LA CAJA MAGICA INDOOR NORTE Pista 5",
    "categoria": "Cadete Masc. Pref.",
    "notif": "390561",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795338000,
+   "fecha": "22/11/2026",
+   "hora": "10:00",
+   "local": "C.D.V. PLATA",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "PALOMERAS, PDVO. MPAL.",
+   "categoria": "Sub 22 Masc. PLATA",
+   "notif": "391014",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795347000,
+   "fecha": "22/11/2026",
+   "hora": "12:30",
+   "local": "CDEBSMV",
+   "visit": "COSLADA C.B. PLS SERRACINES",
+   "campo": "SAN MARTIN DE LA VEGA, PABELLON",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "399069",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795365000,
+   "fecha": "22/11/2026",
+   "hora": "17:30",
+   "local": "FOTOENERGY LEGANÉS",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "CARLOS SASTRE, PABELLON",
+   "categoria": "2ª Div Aut Fem ORO",
+   "notif": "389751",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795370400,
+   "fecha": "22/11/2026",
+   "hora": "19:00",
+   "local": "VILLA DE ALGETE",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "DUQUE DE ALGETE, PABELLON",
+   "categoria": "Liga Ginos Masculina PLATA",
+   "notif": "382237",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795370400,
+   "fecha": "22/11/2026",
+   "hora": "19:00",
+   "local": "C.B. PIZARRO MACLAREN´S CAMPUS ÁVILA",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "IDEO, POLIDEPORTIVO",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "398689",
    "buscar": "serracines",
    "skip": 100
   }
