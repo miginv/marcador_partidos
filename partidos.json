@@ -1,79 +1,7 @@
 {
- "actualizado": "2026-11-21 13:00",
+ "actualizado": "2026-11-22 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795275000,
-   "fecha": "21/11/2026",
-   "hora": "16:30",
-   "local": "COSLADA C.B. SERRACINES",
-   "visit": "MOSTOLES BASKET VESTAL REFORMAS",
-   "campo": "C.E.I.P. SERRACINES, PABELLON",
-   "categoria": "Alv Fem 2ºaño LIGA MARCO ALDANY - PLATA",
-   "notif": "395565",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795275000,
-   "fecha": "21/11/2026",
-   "hora": "16:30",
-   "local": "IRLANDESAS 2",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "IRLANDESAS, COLEGIO (Semicubierto)",
-   "categoria": "Cadete Fem. Pref.",
-   "notif": "391552",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795281300,
-   "fecha": "21/11/2026",
-   "hora": "18:15",
-   "local": "COSLADA C.B. SERRACINES",
-   "visit": "CB VILLA DE LEGANÉS",
-   "campo": "C.E.I.P. SERRACINES, PABELLON",
-   "categoria": "Infantil Fem. Pref.",
-   "notif": "404436",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795287600,
-   "fecha": "21/11/2026",
-   "hora": "20:00",
-   "local": "COSLADA C.B. SERRACINES",
-   "visit": "COLEGIO EL PRADO",
-   "campo": "C.E.I.P. SERRACINES, PABELLON",
-   "categoria": "Junior Masc. Pref.",
-   "notif": "378663",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795287600,
-   "fecha": "21/11/2026",
-   "hora": "20:00",
-   "local": "MOVISTAR ESTUDIANTES ARRANZ",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "LA CAJA MAGICA INDOOR NORTE Pista 5",
-   "categoria": "Cadete Masc. Pref.",
-   "notif": "390561",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795338000,
-   "fecha": "22/11/2026",
-   "hora": "10:00",
-   "local": "C.D.V. PLATA",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "PALOMERAS, PDVO. MPAL.",
-   "categoria": "Sub 22 Masc. PLATA",
-   "notif": "391014",
-   "buscar": "serracines",
-   "skip": 100
-  },
   {
    "ts": 1795347000,
    "fecha": "22/11/2026",
@@ -119,6 +47,30 @@
    "campo": "IDEO, POLIDEPORTIVO",
    "categoria": "2ª Div Aut Masc BRONCE",
    "notif": "398689",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795464300,
+   "fecha": "23/11/2026",
+   "hora": "21:05",
+   "local": "LEGENDS VILLA DE LEGANES",
+   "visit": "BASUKONIA",
+   "campo": "CAJA MAGICA 3",
+   "categoria": "FreeBasket Masculina",
+   "notif": "406375",
+   "buscar": "leganes",
+   "skip": 850
+  },
+  {
+   "ts": 1795465800,
+   "fecha": "23/11/2026",
+   "hora": "21:30",
+   "local": "BASKETEMATAS",
+   "visit": "SERRACINES FEMENINO",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "406654",
    "buscar": "serracines",
    "skip": 100
   }
