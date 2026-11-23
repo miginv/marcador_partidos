@@ -1,5 +1,5 @@
 {
- "version": "1.0.2",
+ "version": "1.0.3",
  "files": [
   "boot.py",
   "marcador_fbm.py",
@@ -8,6 +8,7 @@
   "modo_fbm.py",
   "mensajes_fbm.py",
   "wifi_portal.py",
-  "font_narrow.py"
+  "font_narrow.py",
+  "orientacion.py"
  ]
 }
