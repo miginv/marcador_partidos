@@ -13,6 +13,22 @@ WIDTH = 32
 # El zumbador pita si su pin queda flotando: lo primero, a nivel bajo
 _buzz = machine.Pin(15, machine.Pin.OUT, value=0)
 
+# Arranca a brillo minimo (de noche no deslumbra al reiniciar); el brillo automatico de
+# ajustes_tc001 lo sube segun la luz en cuanto arranca el servidor. Si el automatico esta
+# desactivado en ajustes_tc001.json se deja el brillo de my_shared.
+try:
+    import json as _json
+    import my_shared as _ms
+    try:
+        with open("ajustes_tc001.json") as _f:
+            _auto = _json.load(_f).get("brillo", {}).get("auto", True)
+    except Exception:
+        _auto = True
+    if _auto:
+        _ms.BRIGHTNESS = 1 / 255
+except Exception as _e:
+    print("[HW] brillo inicial:", _e)
+
 
 def led_index(x, y):
     if y & 1:
