@@ -1,55 +1,7 @@
 {
- "actualizado": "2026-11-22 13:00",
+ "actualizado": "2026-11-23 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795347000,
-   "fecha": "22/11/2026",
-   "hora": "12:30",
-   "local": "CDEBSMV",
-   "visit": "COSLADA C.B. PLS SERRACINES",
-   "campo": "SAN MARTIN DE LA VEGA, PABELLON",
-   "categoria": "2ª Div Aut Masc BRONCE",
-   "notif": "399069",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795365000,
-   "fecha": "22/11/2026",
-   "hora": "17:30",
-   "local": "FOTOENERGY LEGANÉS",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "CARLOS SASTRE, PABELLON",
-   "categoria": "2ª Div Aut Fem ORO",
-   "notif": "389751",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795370400,
-   "fecha": "22/11/2026",
-   "hora": "19:00",
-   "local": "VILLA DE ALGETE",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "DUQUE DE ALGETE, PABELLON",
-   "categoria": "Liga Ginos Masculina PLATA",
-   "notif": "382237",
-   "buscar": "serracines",
-   "skip": 100
-  },
-  {
-   "ts": 1795370400,
-   "fecha": "22/11/2026",
-   "hora": "19:00",
-   "local": "C.B. PIZARRO MACLAREN´S CAMPUS ÁVILA",
-   "visit": "COSLADA C.B. SERRACINES",
-   "campo": "IDEO, POLIDEPORTIVO",
-   "categoria": "2ª Div Aut Masc BRONCE",
-   "notif": "398689",
-   "buscar": "serracines",
-   "skip": 100
-  },
   {
    "ts": 1795464300,
    "fecha": "23/11/2026",
@@ -73,6 +25,42 @@
    "notif": "406654",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1795548600,
+   "fecha": "24/11/2026",
+   "hora": "20:30",
+   "local": "ALCALA",
+   "visit": "EUROPEA",
+   "campo": "UNIVERSIDAD ALCALA, PABELLON",
+   "categoria": "Universitaria Femenina",
+   "notif": "380667",
+   "buscar": "alcala",
+   "skip": 1500
+  },
+  {
+   "ts": 1795550700,
+   "fecha": "24/11/2026",
+   "hora": "21:05",
+   "local": "VILLA DE VALLEKAS VETERANOS",
+   "visit": "A\\u0026AA",
+   "campo": "CAJA MAGICA 1",
+   "categoria": "FreeBasket O35 Masculina",
+   "notif": "406503",
+   "buscar": "veteranos",
+   "skip": 0
+  },
+  {
+   "ts": 1795552800,
+   "fecha": "24/11/2026",
+   "hora": "21:40",
+   "local": "PBL SUPER SENIOR",
+   "visit": "CDIROZASBASKET",
+   "campo": "MATER SALVATORIS P3",
+   "categoria": "FreeBasket O45 Masculina",
+   "notif": "406718",
+   "buscar": "senior",
+   "skip": 0
   }
  ]
 }
