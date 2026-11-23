@@ -2,6 +2,7 @@ import socket
 import json
 import my_display
 import my_shared
+import ajustes_tc001
 
 message_queue = []
 
@@ -74,14 +75,19 @@ def process_next_message():
 def handle_settings_request(cl, body):
     try:
         payload = json.loads(body)
-        if 'BRI' in payload:
+        if 'ABRI' in payload:          # brillo automatico por el sensor de luz (como Awtrix 3)
+            ajustes_tc001.cambiar({'brillo': {'auto': bool(payload['ABRI'])}})
+        if 'BRI' in payload and ajustes_tc001.AJUSTES['brillo'].get('auto'):
+            print('BRI ignorado: brillo automatico activo')
+        elif 'BRI' in payload:
             bri = payload['BRI']
             try:
                 bri_value = int(float(bri))
                 my_shared.BRIGHTNESS = max(0, min(100, bri_value)) / 100.0
             except Exception:
                 pass
-        response_body = json.dumps({'success': True, 'BRI': int(my_shared.BRIGHTNESS * 100)})
+        response_body = json.dumps({'success': True, 'BRI': int(my_shared.BRIGHTNESS * 100),
+                                    'ABRI': bool(ajustes_tc001.AJUSTES['brillo'].get('auto'))})
         send_json_response(cl, 200, response_body)
         print('Ajuste de brillo Awtrix:', response_body)
         return True
@@ -132,12 +138,26 @@ def handle_client(cl):
             send_json_response(cl, 200, json.dumps(hw_tc001.stats()))
             return
 
+        if request_line.startswith('GET /api/ajustes'):
+            send_json_response(cl, 200, json.dumps(ajustes_tc001.estado()))
+            return
+
+        if request_line.startswith('POST /api/ajustes'):
+            parts = raw_request.split('\r\n\r\n', 1)
+            try:
+                ajustes_tc001.cambiar(json.loads(parts[1]))
+                send_json_response(cl, 200, json.dumps(ajustes_tc001.estado()))
+            except Exception as e:
+                send_json_response(cl, 400, json.dumps({'success': False, 'error': str(e)}))
+            return
+
         if request_line.startswith('GET /api/version'):
             send_json_response(cl, 200, version_info())
             return
 
         if request_line.startswith('GET /api/settings'):
-            body = json.dumps({'BRI': int(my_shared.BRIGHTNESS * 100)})
+            body = json.dumps({'BRI': int(my_shared.BRIGHTNESS * 100),
+                               'ABRI': bool(ajustes_tc001.AJUSTES['brillo'].get('auto'))})
             send_json_response(cl, 200, body)
             return
 
@@ -272,6 +292,8 @@ def start_api_server_with_clock():
             except Exception as e:
                 print('Error NTP:', e)
             last_ntp = now
+
+        ajustes_tc001.brillo_auto()     # sensor de luz, una lectura por segundo
 
         # Dibujar un frame del reloj (no bloqueante)
         separator_on = int(time.time()) % 2 == 0

@@ -19,7 +19,18 @@ COLOR_ORDER = "RGB"
 def scale_rgb(r, g, b, scale):
     if scale <= 0:
         return 0, 0, 0
-    return min(255, int(r * scale)), min(255, int(g * scale)), min(255, int(b * scale))
+    return _c(r, scale), _c(g, scale), _c(b, scale)
+
+
+def _c(v, scale):
+    """Canal escalado; un canal encendido nunca baja de 1 (a brillo minimo se sigue viendo)."""
+    if v <= 0:
+        return 0
+    return max(1, min(255, int(v * scale)))
+
+
+def _e(v):
+    return _c(v, my_shared.BRIGHTNESS)
 
 
 class GifPlayer:
@@ -275,7 +286,7 @@ def _process_awtrix(payload):
                             color = gif_color if COLOR_ORDER == "RGB" else (gif_color[1], gif_color[0], gif_color[2])
                     if fb.pixel(x, y):
                         tr, tg, tb = color_req[0], color_req[1], color_req[2]
-                        color = (int(tr * my_shared.BRIGHTNESS), int(tg * my_shared.BRIGHTNESS), int(tb * my_shared.BRIGHTNESS)) if COLOR_ORDER == "RGB" else (int(tg * my_shared.BRIGHTNESS), int(tr * my_shared.BRIGHTNESS), int(tb * my_shared.BRIGHTNESS))
+                        color = (_e(tr), _e(tg), _e(tb)) if COLOR_ORDER == "RGB" else (_e(tg), _e(tr), _e(tb))
                     np[idx] = color
 
             np.write()
@@ -331,9 +342,9 @@ def display_match_results(text_izq, color_izq, text_der, color_der, duracion=3, 
                                 idx = led_index(px, py)
                                 r, g, b = color[0], color[1], color[2]
                                 if COLOR_ORDER == "GRB":
-                                    np[idx] = (int(g * my_shared.BRIGHTNESS), int(r * my_shared.BRIGHTNESS), int(b * my_shared.BRIGHTNESS))
+                                    np[idx] = (_e(g), _e(r), _e(b))
                                 else:
-                                    np[idx] = (int(r * my_shared.BRIGHTNESS), int(g * my_shared.BRIGHTNESS), int(b * my_shared.BRIGHTNESS))
+                                    np[idx] = (_e(r), _e(g), _e(b))
                             char_width = max(char_width, c + 1)
                 current_x += (char_width if char_width > 0 else 3) + 1
             else:
@@ -371,9 +382,9 @@ def _np_draw_text_region(text, color, x_min, x_max, font=None):
     br = my_shared.BRIGHTNESS
     r, g, b = color
     if COLOR_ORDER == "GRB":
-        scaled = (int(g * br), int(r * br), int(b * br))
+        scaled = (_e(g), _e(r), _e(b))
     else:
-        scaled = (int(r * br), int(g * br), int(b * br))
+        scaled = (_e(r), _e(g), _e(b))
     current_x = start_x
     for char in text:
         if char in font:
@@ -469,9 +480,9 @@ def demo_cronometro():
                             if 0 <= px < 32 and 0 <= py < 8:
                                 idx = led_index(px, py)
                                 if COLOR_ORDER == "GRB":
-                                    np[idx] = (int(color_crono[1] * my_shared.BRIGHTNESS), int(color_crono[0] * my_shared.BRIGHTNESS), int(color_crono[2] * my_shared.BRIGHTNESS))
+                                    np[idx] = (_e(color_crono[1]), _e(color_crono[0]), _e(color_crono[2]))
                                 else:
-                                    np[idx] = (int(color_crono[0] * my_shared.BRIGHTNESS), int(color_crono[1] * my_shared.BRIGHTNESS), int(color_crono[2] * my_shared.BRIGHTNESS))
+                                    np[idx] = (_e(color_crono[0]), _e(color_crono[1]), _e(color_crono[2]))
                             cw = max(cw, c + 1)
                 curr_x += (cw if cw > 0 else 3) + 1
 
@@ -493,9 +504,9 @@ def display_clock_frame(hours, minutes, day, separator_on):
         for y in range(8):
             idx = led_index(x, y)
             if y in (0, 1):
-                np[idx] = (int(255 * bri), 0, 0)
+                np[idx] = (_e(255), 0, 0)
             else:
-                np[idx] = (int(255 * bri), int(255 * bri), int(255 * bri))
+                np[idx] = (_e(255), _e(255), _e(255))
 
     # Día en negro sobre el calendario
     day_text = str(day)
@@ -527,7 +538,7 @@ def display_clock_frame(hours, minutes, day, separator_on):
         for y in range(8):
             idx = led_index(x, y)
             if fb.pixel(x, y):
-                np[idx] = (int(255 * bri), int(255 * bri), int(255 * bri))
+                np[idx] = (_e(255), _e(255), _e(255))
             else:
                 np[idx] = (0, 0, 0)
 
