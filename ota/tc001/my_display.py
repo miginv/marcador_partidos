@@ -17,9 +17,18 @@ COLOR_ORDER = "RGB"
 
 
 def scale_rgb(r, g, b, scale):
-    if scale <= 0:
+    """Escala conservando el tono: el canal mas fuerte nunca baja de 1 y los demas van en
+    proporcion a el (a brillo minimo un naranja queda rojo+verde, no blanco 1,1,1)."""
+    m = max(r, g, b)
+    if scale <= 0 or m <= 0:
         return 0, 0, 0
-    return _c(r, scale), _c(g, scale), _c(b, scale)
+    top = max(1, min(255, int(m * scale)))
+    f = top / m
+    return int(r * f + 0.25), int(g * f + 0.25), int(b * f + 0.25)
+
+
+def _e3(r, g, b):
+    return scale_rgb(r, g, b, my_shared.BRIGHTNESS)
 
 
 def _c(v, scale):
@@ -286,7 +295,7 @@ def _process_awtrix(payload):
                             color = gif_color if COLOR_ORDER == "RGB" else (gif_color[1], gif_color[0], gif_color[2])
                     if fb.pixel(x, y):
                         tr, tg, tb = color_req[0], color_req[1], color_req[2]
-                        color = (_e(tr), _e(tg), _e(tb)) if COLOR_ORDER == "RGB" else (_e(tg), _e(tr), _e(tb))
+                        color = _e3(tr, tg, tb) if COLOR_ORDER == "RGB" else _e3(tg, tr, tb)
                     np[idx] = color
 
             np.write()
@@ -342,9 +351,9 @@ def display_match_results(text_izq, color_izq, text_der, color_der, duracion=3, 
                                 idx = led_index(px, py)
                                 r, g, b = color[0], color[1], color[2]
                                 if COLOR_ORDER == "GRB":
-                                    np[idx] = (_e(g), _e(r), _e(b))
+                                    np[idx] = _e3(g, r, b)
                                 else:
-                                    np[idx] = (_e(r), _e(g), _e(b))
+                                    np[idx] = _e3(r, g, b)
                             char_width = max(char_width, c + 1)
                 current_x += (char_width if char_width > 0 else 3) + 1
             else:
@@ -382,9 +391,9 @@ def _np_draw_text_region(text, color, x_min, x_max, font=None):
     br = my_shared.BRIGHTNESS
     r, g, b = color
     if COLOR_ORDER == "GRB":
-        scaled = (_e(g), _e(r), _e(b))
+        scaled = _e3(g, r, b)
     else:
-        scaled = (_e(r), _e(g), _e(b))
+        scaled = _e3(r, g, b)
     current_x = start_x
     for char in text:
         if char in font:
@@ -480,9 +489,9 @@ def demo_cronometro():
                             if 0 <= px < 32 and 0 <= py < 8:
                                 idx = led_index(px, py)
                                 if COLOR_ORDER == "GRB":
-                                    np[idx] = (_e(color_crono[1]), _e(color_crono[0]), _e(color_crono[2]))
+                                    np[idx] = _e3(color_crono[1], color_crono[0], color_crono[2])
                                 else:
-                                    np[idx] = (_e(color_crono[0]), _e(color_crono[1]), _e(color_crono[2]))
+                                    np[idx] = _e3(color_crono[0], color_crono[1], color_crono[2])
                             cw = max(cw, c + 1)
                 curr_x += (cw if cw > 0 else 3) + 1
 
@@ -506,7 +515,7 @@ def display_clock_frame(hours, minutes, day, separator_on):
             if y in (0, 1):
                 np[idx] = (_e(255), 0, 0)
             else:
-                np[idx] = (_e(255), _e(255), _e(255))
+                np[idx] = _e3(255, 255, 255)
 
     # Día en negro sobre el calendario
     day_text = str(day)
@@ -538,7 +547,7 @@ def display_clock_frame(hours, minutes, day, separator_on):
         for y in range(8):
             idx = led_index(x, y)
             if fb.pixel(x, y):
-                np[idx] = (_e(255), _e(255), _e(255))
+                np[idx] = _e3(255, 255, 255)
             else:
                 np[idx] = (0, 0, 0)
 
