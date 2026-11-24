@@ -200,9 +200,32 @@ def activar(est):
             log("[ACTIVAR] TC001 no responde (en modo marcador o apagado), se reintenta:", e)
 
 
+PLAZO_SEG = 3 * 24 * 3600     # sin maquina en 3 dias: se deja de intentar y se avisa
+
+
+def plazo_agotado():
+    """True (y aviso por Telegram + temporizador desactivado) si llevamos mas de PLAZO_SEG."""
+    est = json.load(open(ESTADO)) if os.path.exists(ESTADO) else {}
+    if "inicio" not in est:
+        est["inicio"] = time.time()
+        json.dump(est, open(ESTADO, "w"), indent=1)
+    if time.time() - est["inicio"] < PLAZO_SEG:
+        return False
+    try:
+        telegram("Marcador: Oracle no ha dado maquina gratuita en Madrid en 3 dias. "
+                 "Dejo de pedirla; toca elegir otra opcion para el servidor.")
+    except Exception as e:
+        log("[PLAZO] Telegram:", e)
+    subprocess.run(["systemctl", "disable", "--now", TEMPORIZADOR])
+    log("[PLAZO] 3 dias sin capacidad: temporizador desactivado")
+    return True
+
+
 def main():
     inst = instancia()
     if inst is None:
+        if plazo_agotado():
+            return 0
         inst = pedir(red())
         if inst is None:
             return 2                           # sin capacidad: el temporizador lo vuelve a intentar
