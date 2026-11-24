@@ -1,0 +1,7 @@
+[Unit]
+Description=Reintenta repartir las claves cada 2 min hasta que todas las pantallas las tengan
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=2min
+[Install]
+WantedBy=timers.target

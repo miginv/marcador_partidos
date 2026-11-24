@@ -3,8 +3,11 @@
 #  - marcador (o sin fichero): sigue el partido; sin partido cerca pasa a mensajes
 #  - mensajes: reloj + API Awtrix de siempre; 15 min antes de un partido pasa a marcador
 # Para volver al reloj Awtrix de siempre: borrar o renombrar marcador_fbm.py.
+# Con demo.txt (y demo_anuncio.py) hace solo la demo de mensajes con iconos, sin WiFi.
 # Sin ninguna WiFi guardada al alcance: red abierta "scoreboard" para dar de alta otra.
 import os as _os
+if "demo.txt" in _os.listdir() and "demo_anuncio.py" in _os.listdir():
+    import demo_anuncio          # modo demo (fotos/anuncio): no vuelve; borrar demo.txt para salir
 if "marcador_fbm.py" in _os.listdir():
     import modo_fbm
     import wifi_portal

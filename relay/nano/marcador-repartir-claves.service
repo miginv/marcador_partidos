@@ -1,0 +1,6 @@
+[Unit]
+Description=Entrega a cada pantalla su clave del servidor del marcador
+[Service]
+Type=oneshot
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/local/bin/python3 /root/marcador_partidos/relay/repartir_claves.py
