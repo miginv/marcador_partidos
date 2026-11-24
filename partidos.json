@@ -1,31 +1,7 @@
 {
- "actualizado": "2026-11-23 13:00",
+ "actualizado": "2026-11-24 12:33",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795464300,
-   "fecha": "23/11/2026",
-   "hora": "21:05",
-   "local": "LEGENDS VILLA DE LEGANES",
-   "visit": "BASUKONIA",
-   "campo": "CAJA MAGICA 3",
-   "categoria": "FreeBasket Masculina",
-   "notif": "406375",
-   "buscar": "leganes",
-   "skip": 850
-  },
-  {
-   "ts": 1795465800,
-   "fecha": "23/11/2026",
-   "hora": "21:30",
-   "local": "BASKETEMATAS",
-   "visit": "SERRACINES FEMENINO",
-   "campo": "EST. LAS TABLAS 2",
-   "categoria": "FreeBasket O35 Femenina",
-   "notif": "406654",
-   "buscar": "serracines",
-   "skip": 100
-  },
   {
    "ts": 1795548600,
    "fecha": "24/11/2026",
@@ -61,6 +37,30 @@
    "notif": "406718",
    "buscar": "senior",
    "skip": 0
+  },
+  {
+   "ts": 1795633200,
+   "fecha": "25/11/2026",
+   "hora": "20:00",
+   "local": "GMADRID NOSOTROS",
+   "visit": "CB ARGANZUELA CENTRO VETERANOS",
+   "campo": "CAJA MAGICA 2",
+   "categoria": "FreeBasket O35 Masculina",
+   "notif": "406525",
+   "buscar": "veteranos",
+   "skip": 0
+  },
+  {
+   "ts": 1795640400,
+   "fecha": "25/11/2026",
+   "hora": "22:00",
+   "local": "SERRACINES MASCULINO A",
+   "visit": "TE VI Y NO TE LA DI",
+   "campo": "ESCUELA IDEO P2",
+   "categoria": "FreeBasket O35 Masculina",
+   "notif": "406519",
+   "buscar": "serracines",
+   "skip": 100
   }
  ]
 }
