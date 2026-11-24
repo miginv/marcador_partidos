@@ -129,6 +129,7 @@ def pedir(sub_id):
         except oci.exceptions.ServiceError as e:
             if e.status in (500, 429) or "capacity" in str(e.message).lower():
                 log("[VM] sin capacidad:", forma, e.status)
+                time.sleep(15)                 # sin rafagas: evita el 429 de la API
                 continue
             raise
     return None
