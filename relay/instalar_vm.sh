@@ -56,8 +56,9 @@ WantedBy=multi-user.target
 EOF
 
 # puerto 80 en el cortafuegos de la imagen (antes de la regla REJECT) y que se guarde
-if ! sudo iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null; then
-    sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+# (solo si la imagen trae reglas propias, como la de Oracle; en Google Cloud no hay)
+if sudo iptables -S INPUT | grep -q REJECT && ! sudo iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null; then
+    sudo iptables -I INPUT 1 -m state --state NEW -p tcp --dport 80 -j ACCEPT
 fi
 if command -v netfilter-persistent >/dev/null; then sudo netfilter-persistent save >/dev/null; fi
 
