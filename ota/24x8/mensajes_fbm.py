@@ -126,6 +126,16 @@ def _atender(cl):
             _responder(cl, 200, json.dumps({"BRI": int(my_shared.BRIGHTNESS * 100)}))
         elif linea.startswith("POST /api/settings"):
             d = json.loads(cuerpo)
+            if "RELAY_CLAVE" in d:
+                # clave del servidor del marcador -> relay.json (clave "" = FBM directa)
+                r = {"clave": str(d["RELAY_CLAVE"])}
+                if d.get("RELAY_URL"):
+                    r["url"] = str(d["RELAY_URL"])
+                with open("relay.json", "w") as f:
+                    json.dump(r, f)
+                _responder(cl, 200, json.dumps({"success": True, "relay": r.get("url", "defecto"),
+                                                "clave": bool(r["clave"])}))
+                return
             if "BRI" in d:
                 my_shared.BRIGHTNESS = max(0, min(100, int(float(d["BRI"])))) / 100.0
             _responder(cl, 200, json.dumps({"success": True, "BRI": int(my_shared.BRIGHTNESS * 100)}))
