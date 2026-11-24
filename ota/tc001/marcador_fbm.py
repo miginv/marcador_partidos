@@ -7,12 +7,32 @@ import json
 # Misma logica que el boot.py del marcador 24x8; boot.py lo lanza si existe este fichero.
 import my_shared
 # solo en memoria: no se toca my_shared.py (lo usa la Awtrix)
-my_shared.BRIGHTNESS = 0.333     # igual que el marcador 24x8 (se dibuja al 50 %)
 my_shared.DEBUG = False
+import ajustes_tc001
+# TC001: los datos llegan del servidor propio por http (sin TLS, que aqui no cabe):
+# ajustes_tc001.json -> {"relay": {"url": "http://host:puerto"}}. Sin url, FBM directa.
+RELAY = ajustes_tc001.AJUSTES.get("relay", {}).get("url", "")
+if not ajustes_tc001.AJUSTES["brillo"].get("auto"):
+    my_shared.BRIGHTNESS = 0.333     # igual que el marcador 24x8 (se dibuja al 50 %)
 import marcador_disp as my_display
 import font_narrow as _f8
-import gesdeportiva as fbm
+if RELAY:
+    import fbm_http as fbm
+    fbm.URL = RELAY
+else:
+    import gesdeportiva as fbm
 import modo_fbm
+
+# brillo automatico tambien en modo marcador (antes de cada envio a los LED, 1 vez/s)
+_show_orig = my_display._show
+
+
+def _show_brillo():
+    ajustes_tc001.brillo_auto()
+    _show_orig()
+
+
+my_display._show = _show_brillo
 
 
 def _dbg(*a):
@@ -446,6 +466,8 @@ try:
     del _cfg
 except Exception:
     my_shared.DEBUG = False
+if RELAY:
+    _url = RELAY + "/partidos.json"   # la lista tambien del servidor: nada de https
 gc.collect()
 
 PARTIDOS = cargar_partidos()

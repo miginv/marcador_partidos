@@ -17,7 +17,8 @@ PARTIDOS_URL = "https://raw.githubusercontent.com/miginv/marcador_partidos/main/
 
 def hay_mensajes():
     """Solo se cambia de modo si la placa tiene modo mensajes."""
-    return "mensajes_fbm.py" in os.listdir() or "mensajes_fbm.mpy" in os.listdir()
+    l = os.listdir()
+    return "mensajes_fbm.py" in l or "mensajes_fbm.mpy" in l or "mensajes_tc001.py" in l
 
 
 def leer_modo():
@@ -73,15 +74,16 @@ def partido_cercano():
     return None
 
 
-def descargar():
-    """Baja la lista de GitHub a partidos.json. True si ha ido bien."""
+def descargar(url=None):
+    """Baja la lista (GitHub, o la url que se pase: el servidor propio) a partidos.json."""
     import gc
-    url = PARTIDOS_URL
-    try:
-        with open("config.json") as f:
-            url = json.load(f).get("partidos_url", PARTIDOS_URL)
-    except Exception:
-        pass
+    if not url:
+        url = PARTIDOS_URL
+        try:
+            with open("config.json") as f:
+                url = json.load(f).get("partidos_url", PARTIDOS_URL)
+        except Exception:
+            pass
     gc.collect()
     try:
         import requests

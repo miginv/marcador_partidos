@@ -192,6 +192,31 @@ import my_network
 import my_display
 import my_server
 
+# ---------- paso automatico a marcador (servidor propio por http, sin TLS) ----------
+import ajustes_tc001
+_rel = ajustes_tc001.AJUSTES.get("relay", {})
+if _rel.get("url") and _rel.get("auto"):
+    import modo_fbm
+    _t = {"rev": 0, "lista": 0}
+    _frame_orig = my_display.display_clock_frame
+
+    def _frame(*a, **k):
+        # my_server dibuja el reloj varias veces por segundo: se aprovecha para revisar
+        ahora = time.time()
+        if ahora - _t["rev"] >= 60:
+            _t["rev"] = ahora
+            try:
+                if ahora - _t["lista"] >= 15 * 60:
+                    if modo_fbm.descargar(_rel["url"] + "/partidos.json"):
+                        _t["lista"] = ahora
+                if modo_fbm.partido_cercano():
+                    modo_fbm.cambiar("marcador")
+            except Exception as e:
+                print("[MODO] error revisando:", e)
+        return _frame_orig(*a, **k)
+
+    my_display.display_clock_frame = _frame
+
 my_display.process_awtrix({
     "text": "{} {}".format(my_network.get_ip(), my_network.get_hostname()),
     "color": [0, 80, 255], "icon": 32930, "repeat": 1, "textCase": 3, "scrollspeed": 50})

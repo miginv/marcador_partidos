@@ -1,4 +1,4 @@
-# Ajustes propios del TC001: brillo automatico por el sensor de luz.
+# Ajustes propios del TC001: brillo automatico por el sensor de luz y servidor del marcador.
 # (Que mensajes llegan a esta pantalla lo decide nano: telegram_bot.awtrix_iconos_permitidos.)
 # Se guardan en ajustes_tc001.json (no se toca config.json). Se cambian por la API:
 #   GET  /api/ajustes                      -> ajustes actuales + luz medida
@@ -18,6 +18,11 @@ AJUSTES = {
         "max": 50,           # % con mucha luz
         "luz_oscuro": 60,    # lectura del sensor (0-1023) por debajo = oscuro -> min
         "luz_max": 700,      # lectura a partir de la cual va al max
+    },
+    # servidor propio del marcador (relay/servidor.py): http normal, sin TLS
+    "relay": {
+        "url": "",           # p. ej. http://1.2.3.4:8080 ; vacio = sin modo marcador
+        "auto": False,       # pasar solo a marcador 15 min antes de un partido de la lista
     },
 }
 

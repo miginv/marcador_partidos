@@ -161,6 +161,22 @@ def handle_client(cl):
             send_json_response(cl, 200, body)
             return
 
+        if request_line.startswith('POST /api/modo'):
+            # {"modo": "marcador"|"mensajes"}: guarda modo.txt y reinicia en ese modo
+            parts = raw_request.split('\r\n\r\n', 1)
+            try:
+                modo = json.loads(parts[1]).get("modo")
+                if modo not in ("marcador", "mensajes"):
+                    raise ValueError("modo")
+            except Exception as e:
+                send_json_response(cl, 400, json.dumps({'success': False, 'error': str(e)}))
+                return
+            send_json_response(cl, 200, json.dumps({'success': True, 'modo': modo}))
+            cl.close()
+            import modo_fbm
+            modo_fbm.cambiar(modo)
+            return
+
         if request_line.startswith('POST /api/reboot'):
             send_json_response(cl, 200, '{"success": true}')
             cl.close()
