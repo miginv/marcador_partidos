@@ -3,18 +3,6 @@
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
-   "ts": 1795544100,
-   "fecha": "24/11/2026",
-   "hora": "19:15",
-   "local": "C.B. GETAFE \"A\"",
-   "visit": "UROS DE RIVAS `A´",
-   "campo": "JUAN DE LA CIERVA, PABELLON Pista 3",
-   "categoria": "Alv Fem 2ºaño LIGA MARCO ALDANY - ORO",
-   "notif": "394905",
-   "buscar": "getafe",
-   "skip": 900
-  },
-  {
    "ts": 1795548600,
    "fecha": "24/11/2026",
    "hora": "20:30",
