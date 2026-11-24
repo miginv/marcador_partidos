@@ -103,6 +103,18 @@ def buscar(p):
     return None
 
 
+FIN_FORZADO = os.path.join(DIR, "fin_forzado.txt")   # notif (uno por linea) a dar por terminados
+
+
+def fin_forzado():
+    """Partidos que la FBM no cierra (acta sin cerrar, prorroga fantasma...): se publican como
+    FINALIZADO para que las pantallas pasen al siguiente."""
+    try:
+        return {l.split("#")[0].strip() for l in open(FIN_FORZADO)} - {""}
+    except OSError:
+        return set()
+
+
 def main():
     lista, t_lista = [], 0
     seg = {}        # clave -> {"hid","al","av","hora","prox","n","fin"}
@@ -146,6 +158,9 @@ def main():
                 st["hid"] = None          # sesion caducada: se vuelve a buscar
                 st["prox"] = ahora + 10
                 continue
+            if k in fin_forzado():
+                mk["estado"], mk["vivo"] = "FINALIZADO", False
+                log("[FIN] forzado a mano:", k)
             st["n"] += 1
             publicar("/m/%s.json" % k, {"clave": k, "al": st["al"], "av": st["av"], "hora": st["hora"],
                                         "m": mk, "t": int(ahora), "n": st["n"]})
