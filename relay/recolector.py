@@ -19,7 +19,8 @@ DIR = os.path.dirname(os.path.abspath(__file__))
 OTA = os.path.join(DIR, "..", "ota", "32x8")
 RELAY = os.environ.get("RELAY_URL", "http://127.0.0.1:8080").rstrip("/")
 TOKEN = os.environ.get("RELAY_TOKEN") or open(os.path.join(DIR, "token.txt")).read().strip()
-PARTIDOS_URL = "https://raw.githubusercontent.com/miginv/marcador_partidos/main/partidos.json"
+PARTIDOS_URL = os.environ.get("PARTIDOS_URL",
+                              "https://raw.githubusercontent.com/miginv/marcador_partidos/main/partidos.json")
 POLL_VIVO = int(os.environ.get("POLL_VIVO", 15))     # s entre consultas a la FBM en juego
 POLL_ESPERA = 60      # s antes de empezar / sin encontrar
 ANTES_MIN = 20        # empieza a seguir un partido 20 min antes
@@ -122,7 +123,8 @@ def main():
         ahora = time.time()
         if ahora - t_lista > LISTA_SEG or not lista:
             try:
-                with urllib.request.urlopen(PARTIDOS_URL + "?t=%d" % ahora, timeout=20) as r:
+                url = PARTIDOS_URL if PARTIDOS_URL.startswith("file:") else PARTIDOS_URL + "?t=%d" % ahora
+                with urllib.request.urlopen(url, timeout=20) as r:
                     datos = json.loads(r.read())
                 lista = datos.get("partidos", [])
                 publicar("/partidos.json", datos)
