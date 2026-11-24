@@ -7,7 +7,9 @@ import json
 # Misma logica que el boot.py del marcador 24x8; boot.py lo lanza si existe este fichero.
 import my_shared
 # solo en memoria: no se toca my_shared.py (lo usa la Awtrix)
-my_shared.BRIGHTNESS = 0.333     # igual que el marcador 24x8 (se dibuja al 50 %)
+# brillo del marcador: 0.333 (igual que el 24x8, se dibuja al 50 %) o el de la placa
+# (MARCADOR_BRIGHTNESS en su my_shared.py, p. ej. pantallas largas con poca fuerza)
+my_shared.BRIGHTNESS = getattr(my_shared, "MARCADOR_BRIGHTNESS", 0.333)
 my_shared.DEBUG = False
 import marcador_disp as my_display
 import font_narrow as _f8
