@@ -23,6 +23,8 @@ CLAVE_SSH = "/root/.ssh/oracle_marcador"
 ESTADO = "/root/.oci/marcador_vm.json"
 INSTALADOR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "instalar_vm.sh")
 TEMPORIZADOR = "oracle-crear-vm.timer"
+TC001 = "http://192.168.1.197"
+SERVICIOS_NANO = ["marcador-recolector", "marcador-servidor"]
 FORMAS = [("VM.Standard.A1.Flex", {"ocpus": 1, "memory_in_gbs": 6}),
           ("VM.Standard.E2.1.Micro", None)]
 
@@ -145,6 +147,58 @@ def instalar(ip):
     return r.returncode == 0
 
 
+def telegram(texto):
+    import urllib.parse
+    import urllib.request
+    tg = json.load(open("/root/config.json"))["telegram"]
+    datos = urllib.parse.urlencode({"chat_id": tg["chat_id"], "text": texto}).encode()
+    url = "https://api.telegram.org/bot%s/sendMessage" % tg["token"]
+    with urllib.request.urlopen(url, data=datos, timeout=20) as r:
+        return r.status == 200
+
+
+def http(url, datos=None, timeout=20):
+    import urllib.request
+    req = urllib.request.Request(url, data=datos, method="POST" if datos else "GET")
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.status, r.read()
+
+
+def activar(est):
+    """Pasos tras instalar; cada uno se marca en est y no se repite."""
+    ip = est["ip"]
+    if not est.get("publico"):
+        try:
+            cod, cuerpo = http("http://%s/partidos.json" % ip)
+            est["publico"] = cod == 200 and bool(json.loads(cuerpo))
+        except Exception as e:
+            log("[ACTIVAR] servidor no responde desde fuera:", e)
+            return
+        log("[ACTIVAR] servidor publico OK")
+    if not est.get("nano_parado"):
+        subprocess.run(["systemctl", "disable", "--now"] + SERVICIOS_NANO)
+        est["nano_parado"] = time.strftime("%F %T")
+        log("[ACTIVAR] servidor y recolector de nano parados")
+    if not est.get("telegram"):
+        try:
+            if telegram("Marcador: ya hay servidor en Oracle (%s, %s). Publica en http://%s y el "
+                        "recolector de nano queda parado. El Ulanzi pasara a leer de alli." %
+                        (est.get("forma"), est.get("region", "Madrid"), ip)):
+                est["telegram"] = time.strftime("%F %T")
+                log("[ACTIVAR] aviso por Telegram enviado")
+        except Exception as e:
+            log("[ACTIVAR] Telegram:", e)
+    if not est.get("tc001"):
+        try:
+            cuerpo = json.dumps({"relay": {"url": "http://" + ip, "auto": True}}).encode()
+            cod, r = http(TC001 + "/api/ajustes", cuerpo)
+            if cod == 200 and ip in r.decode():
+                est["tc001"] = time.strftime("%F %T")
+                log("[ACTIVAR] TC001 apuntado a Oracle (paso automatico a marcador)")
+        except Exception as e:
+            log("[ACTIVAR] TC001 no responde (en modo marcador o apagado), se reintenta:", e)
+
+
 def main():
     inst = instancia()
     if inst is None:
@@ -163,8 +217,11 @@ def main():
         est["instalado"] = time.strftime("%F %T")
         json.dump(est, open(ESTADO, "w"), indent=1)
     if est.get("instalado"):
+        activar(est)
+        json.dump(est, open(ESTADO, "w"), indent=1)
+    if all(est.get(k) for k in ("instalado", "publico", "nano_parado", "telegram", "tc001")):
         subprocess.run(["systemctl", "disable", "--now", TEMPORIZADOR])
-        log("[FIN] instalado en", ip, "- temporizador desactivado")
+        log("[FIN] todo activado en", ip, "- temporizador desactivado")
     return 0
 
 
