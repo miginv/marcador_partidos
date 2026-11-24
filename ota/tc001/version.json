@@ -1,1 +1,1 @@
-{"version": "1.0.4", "files": ["boot.py", "hw_tc001.py", "mensajes_tc001.py", "my_network.py", "my_display.py", "my_server.py", "awtrix_font.py", "wifi_portal.py", "marcador_disp.py", "ajustes_tc001.py", "marcador_fbm.py", "modo_fbm.py", "font_narrow.py", "fbm_http.py"]}
+{"version": "1.0.5", "files": ["boot.py", "hw_tc001.py", "mensajes_tc001.py", "my_network.py", "my_display.py", "my_server.py", "awtrix_font.py", "wifi_portal.py", "marcador_disp.py", "ajustes_tc001.py", "marcador_fbm.py", "modo_fbm.py", "font_narrow.py", "fbm_http.py"]}

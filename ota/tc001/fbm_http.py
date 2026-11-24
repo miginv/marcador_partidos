@@ -7,9 +7,17 @@ import json
 import socket
 
 URL = ""            # http://host[:puerto] (lo fija marcador_fbm desde ajustes_tc001)
+CLAVE = ""          # clave de esta pantalla en el servidor (sin ella responde 404)
 _sid = "relay"      # marcador_fbm vuelve a buscar el partido si son None
 _key = "relay"
 _last_hora = ""
+
+
+def con_clave(ruta):
+    """Ruta con la clave de la pantalla (?k=...) si la hay."""
+    if not CLAVE:
+        return ruta
+    return ruta + ("&" if "?" in ruta else "?") + "k=" + CLAVE
 
 
 def _get(ruta):
@@ -22,7 +30,7 @@ def _get(ruta):
     try:
         s.settimeout(8)
         s.connect(socket.getaddrinfo(host, puerto)[0][-1])
-        s.send(("GET %s HTTP/1.0\r\nHost: %s\r\n\r\n" % (ruta, host)).encode())
+        s.send(("GET %s HTTP/1.0\r\nHost: %s\r\n\r\n" % (con_clave(ruta), host)).encode())
         r = b""
         while True:
             c = s.recv(512)

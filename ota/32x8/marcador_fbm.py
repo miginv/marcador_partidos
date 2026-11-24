@@ -13,24 +13,29 @@ my_shared.BRIGHTNESS = getattr(my_shared, "MARCADOR_BRIGHTNESS", 0.333)
 my_shared.DEBUG = False
 import marcador_disp as my_display
 import font_narrow as _f8
-# datos del partido: por defecto del servidor propio del marcador (Google Cloud, http, un solo
-# cliente de la FBM para todas las pantallas). config.json "relay": "http://host" para otro
-# servidor o "relay": "" para consultar la FBM directamente como antes.
+# datos del partido: del servidor propio del marcador (Google Cloud, http, un solo cliente de
+# la FBM para todas las pantallas) si la placa tiene su clave en relay.json:
+#   {"clave": "<clave de esta pantalla>", "url": "http://34.30.243.27"}   (url opcional)
+# Sin relay.json (o sin clave) consulta la FBM directamente como antes.
 RELAY_DEFECTO = "http://34.30.243.27"
 
 
 def _relay():
     try:
-        with open("config.json") as f:
-            return json.load(f).get("relay", RELAY_DEFECTO)
+        with open("relay.json") as f:
+            d = json.load(f)
+        if d.get("clave"):
+            return d.get("url") or RELAY_DEFECTO, d["clave"]
     except Exception:
-        return RELAY_DEFECTO
+        pass
+    return "", ""
 
 
-RELAY = _relay()
+RELAY, _CLAVE = _relay()
 if RELAY:
     import fbm_http as fbm
     fbm.URL = RELAY
+    fbm.CLAVE = _CLAVE
 else:
     import gesdeportiva as fbm
 import modo_fbm
@@ -468,7 +473,7 @@ try:
 except Exception:
     my_shared.DEBUG = False
 if RELAY:
-    _url = RELAY + "/partidos.json"   # la lista tambien del servidor propio
+    _url = RELAY + fbm.con_clave("/partidos.json")   # la lista tambien del servidor propio
 gc.collect()
 
 PARTIDOS = cargar_partidos()

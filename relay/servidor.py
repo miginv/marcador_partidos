@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Servidor del marcador: guarda y sirve JSON pequenos por http (sin https, para que el
 TC001 y las placas sin memoria para TLS puedan leer).
-  GET  /partidos.json, /m/<clave>.json      -> lo ultimo publicado (sin cache)
-  PUT  /<ruta>.json  cabecera X-Token        -> lo publica (solo el recolector)
-El token se lee de la variable RELAY_TOKEN o del fichero token.txt (nunca en el repo).
+  GET  /partidos.json?k=<clave>, /m/<notif>.json?k=<clave>  -> lo ultimo publicado
+  PUT  /<ruta>.json  cabecera X-Token                       -> lo publica (solo el recolector)
+Leer exige la clave de la pantalla (?k= o cabecera X-Key) si claves.json existe:
+  {"obligatoria": true, "claves": {"<clave>": "nombre de la pantalla", ...}}
+Sin clave valida responde 404 (como si no hubiera nada). Se relee al cambiar el fichero.
+Maximo LIMITE_MIN lecturas por minuto y por IP (429 si se pasa).
+token.txt y claves.json nunca van al repo.
 Uso: python3 servidor.py [puerto]"""
 import json
 import os
@@ -12,6 +16,7 @@ import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlsplit
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 TOKEN = os.environ.get("RELAY_TOKEN") or open(os.path.join(DIR, "token.txt")).read().strip()
@@ -20,6 +25,39 @@ MAX = 64 * 1024
 DATOS = {}            # ruta -> bytes (en memoria; tambien a disco para sobrevivir reinicios)
 GUARDA = os.path.join(DIR, "datos")
 _lock = threading.Lock()
+CLAVES_FICH = os.path.join(DIR, "claves.json")
+_claves = {"mtime": None, "obligatoria": False, "claves": {}}
+LIMITE_MIN = 120
+_uso = {}             # ip -> [minuto, peticiones]
+
+
+def claves():
+    """claves.json (si cambia en disco se vuelve a leer)."""
+    try:
+        mt = os.path.getmtime(CLAVES_FICH)
+    except OSError:
+        _claves.update(mtime=None, obligatoria=False, claves={})
+        return _claves
+    if mt != _claves["mtime"]:
+        try:
+            d = json.load(open(CLAVES_FICH))
+            _claves.update(mtime=mt, obligatoria=bool(d.get("obligatoria", True)),
+                           claves=dict(d.get("claves", {})))
+        except Exception as e:
+            sys.stderr.write("claves.json no valido: %s\n" % e)
+    return _claves
+
+
+def demasiadas(ip):
+    m = int(time.time() // 60)
+    with _lock:
+        u = _uso.get(ip)
+        if not u or u[0] != m:
+            if len(_uso) > 5000:
+                _uso.clear()
+            _uso[ip] = u = [m, 0]
+        u[1] += 1
+        return u[1] > LIMITE_MIN
 
 
 def _fich(ruta):
@@ -46,7 +84,15 @@ class H(BaseHTTPRequestHandler):
             self.wfile.write(cuerpo)
 
     def do_GET(self):
-        ruta = self.path.split("?")[0]
+        partes = urlsplit(self.path)
+        ruta = partes.path
+        if demasiadas(self.client_address[0]):
+            return self._resp(429, b'{"error":"despacio"}')
+        c = claves()
+        if c["obligatoria"]:
+            k = (parse_qs(partes.query).get("k") or [self.headers.get("X-Key") or ""])[0]
+            if k not in c["claves"]:
+                return self._resp(404, b'{"error":"no"}')
         with _lock:
             d = DATOS.get(ruta)
         if d is None:

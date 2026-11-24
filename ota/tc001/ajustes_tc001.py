@@ -23,6 +23,7 @@ AJUSTES = {
     "relay": {
         "url": "",           # p. ej. http://1.2.3.4:8080 ; vacio = sin modo marcador
         "auto": False,       # pasar solo a marcador 15 min antes de un partido de la lista
+        "clave": "",         # clave de esta pantalla en el servidor (?k=...)
     },
 }
 
@@ -90,6 +91,10 @@ def estado():
     d = {"brillo_actual": int(my_shared.BRIGHTNESS * 1000) / 10,
          "luz": hw_tc001.luz(), "luz_media": int(_media or 0)}
     d.update(AJUSTES)
+    rel = dict(AJUSTES.get("relay", {}))
+    if rel.get("clave"):
+        rel["clave"] = "****"          # la clave no se ensena por la API
+    d["relay"] = rel
     return d
 
 

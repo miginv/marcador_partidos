@@ -207,7 +207,8 @@ if _rel.get("url") and _rel.get("auto"):
             _t["rev"] = ahora
             try:
                 if ahora - _t["lista"] >= 15 * 60:
-                    if modo_fbm.descargar(_rel["url"] + "/partidos.json"):
+                    _k = _rel.get("clave", "")
+                    if modo_fbm.descargar(_rel["url"] + "/partidos.json" + ("?k=" + _k if _k else "")):
                         _t["lista"] = ahora
                 if modo_fbm.partido_cercano():
                     modo_fbm.cambiar("marcador")

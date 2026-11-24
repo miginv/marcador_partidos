@@ -19,6 +19,7 @@ import font_narrow as _f8
 if RELAY:
     import fbm_http as fbm
     fbm.URL = RELAY
+    fbm.CLAVE = ajustes_tc001.AJUSTES.get("relay", {}).get("clave", "")
 else:
     import gesdeportiva as fbm
 import modo_fbm
@@ -467,7 +468,7 @@ try:
 except Exception:
     my_shared.DEBUG = False
 if RELAY:
-    _url = RELAY + "/partidos.json"   # la lista tambien del servidor: nada de https
+    _url = RELAY + fbm.con_clave("/partidos.json")   # la lista tambien del servidor: sin https
 gc.collect()
 
 PARTIDOS = cargar_partidos()
