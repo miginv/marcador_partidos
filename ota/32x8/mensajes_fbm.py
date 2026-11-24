@@ -11,6 +11,33 @@ import orientacion
 orientacion.aplicar(my_display.LED_MAP_17)   # mapa de la Awtrix girado si la pantalla va girada
 import my_network
 import my_server
+import json
+
+# Clave del servidor del marcador por la API de siempre: POST /api/settings
+#   {"RELAY_CLAVE": "<clave>", "RELAY_URL": "http://host"}  (url opcional; clave "" = FBM directa)
+# se guarda en relay.json, que es lo que lee marcador_fbm. El resto de ajustes, como siempre.
+_settings_orig = my_server.handle_settings_request
+
+
+def _settings(cl, body):
+    try:
+        p = json.loads(body)
+    except Exception:
+        p = None
+    if isinstance(p, dict) and "RELAY_CLAVE" in p:
+        d = {"clave": str(p["RELAY_CLAVE"])}
+        if p.get("RELAY_URL"):
+            d["url"] = str(p["RELAY_URL"])
+        with open("relay.json", "w") as f:
+            json.dump(d, f)
+        my_server.send_json_response(cl, 200, json.dumps(
+            {"success": True, "relay": d.get("url", "defecto"), "clave": bool(d["clave"])}))
+        print("[RELAY] clave guardada en relay.json")
+        return True
+    return _settings_orig(cl, body)
+
+
+my_server.handle_settings_request = _settings
 
 REVISAR_SEG = 60
 DESCARGA_SEG = 15 * 60
