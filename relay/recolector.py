@@ -116,6 +116,17 @@ def fin_forzado():
         return set()
 
 
+MINIBASKET = ("benj", "alev", "mini", "premini")   # categorias de 6 periodos
+
+
+def periodo(p, mk):
+    """En minibasket (benjamin/alevin) se juegan 6 periodos: la FBM numera el 5 y el 6 como si
+    fueran prorrogas (OT1/OT2). Se publican como Q5/Q6 y la prorroga real (7) como OT1."""
+    if any(c in (p.get("categoria") or "").lower() for c in MINIBASKET):
+        q = mk.get("cuarto") or ""
+        mk["cuarto"] = {"OT1": "Q5", "OT2": "Q6", "OT3": "OT1", "OT4": "OT2"}.get(q, q)
+
+
 def main():
     lista, t_lista = [], 0
     seg = {}        # clave -> {"hid","al","av","hora","prox","n","fin"}
@@ -160,6 +171,7 @@ def main():
                 st["hid"] = None          # sesion caducada: se vuelve a buscar
                 st["prox"] = ahora + 10
                 continue
+            periodo(p, mk)
             if k in fin_forzado():
                 mk["estado"], mk["vivo"] = "FINALIZADO", False
                 log("[FIN] forzado a mano:", k)
