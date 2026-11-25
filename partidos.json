@@ -1,43 +1,7 @@
 {
- "actualizado": "2026-11-24 19:33",
+ "actualizado": "2026-11-25 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795548600,
-   "fecha": "24/11/2026",
-   "hora": "20:30",
-   "local": "ALCALA",
-   "visit": "EUROPEA",
-   "campo": "UNIVERSIDAD ALCALA, PABELLON",
-   "categoria": "Universitaria Femenina",
-   "notif": "380667",
-   "buscar": "alcala",
-   "skip": 1500
-  },
-  {
-   "ts": 1795550700,
-   "fecha": "24/11/2026",
-   "hora": "21:05",
-   "local": "VILLA DE VALLEKAS VETERANOS",
-   "visit": "A\\u0026AA",
-   "campo": "CAJA MAGICA 1",
-   "categoria": "FreeBasket O35 Masculina",
-   "notif": "406503",
-   "buscar": "veteranos",
-   "skip": 0
-  },
-  {
-   "ts": 1795552800,
-   "fecha": "24/11/2026",
-   "hora": "21:40",
-   "local": "PBL SUPER SENIOR",
-   "visit": "CDIROZASBASKET",
-   "campo": "MATER SALVATORIS P3",
-   "categoria": "FreeBasket O45 Masculina",
-   "notif": "406718",
-   "buscar": "senior",
-   "skip": 0
-  },
   {
    "ts": 1795633200,
    "fecha": "25/11/2026",
@@ -61,6 +25,42 @@
    "notif": "406519",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1795719900,
+   "fecha": "26/11/2026",
+   "hora": "20:05",
+   "local": "LA QUINTA DE PEPE",
+   "visit": "PARLA BASQUET VETERANOS",
+   "campo": "BUEN CONSEJO 3",
+   "categoria": "FreeBasket O45 Masculina",
+   "notif": "406695",
+   "buscar": "veteranos",
+   "skip": 0
+  },
+  {
+   "ts": 1795723500,
+   "fecha": "26/11/2026",
+   "hora": "21:05",
+   "local": "DIOSES DEL OLIMPO",
+   "visit": "VALLEKAS BASKET",
+   "campo": "CAJA MAGICA 1",
+   "categoria": "FreeBasket Masculina",
+   "notif": "406469",
+   "buscar": "vallekas",
+   "skip": 150
+  },
+  {
+   "ts": 1795725600,
+   "fecha": "26/11/2026",
+   "hora": "21:40",
+   "local": "VILLANUEVA DE LA CAÑADA VETERANOS",
+   "visit": "MIRAOBRAS",
+   "campo": "MATER SALVATORIS P3",
+   "categoria": "FreeBasket O35 Masculina",
+   "notif": "406530",
+   "buscar": "veteranos",
+   "skip": 0
   }
  ]
 }
