@@ -15,6 +15,18 @@
    "skip": 850
   },
   {
+   "ts": 1795626900,
+   "fecha": "25/11/2026",
+   "hora": "18:15",
+   "local": "SAN AGUSTIN MADRID AZUL",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "SAN AGUSTIN, COLEGIO (Descubierto)",
+   "categoria": "Alv Mas 2ºaño LIGA MARCO ALDANY - ORO",
+   "notif": "394181",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
    "ts": 1795629600,
    "fecha": "25/11/2026",
    "hora": "19:00",
