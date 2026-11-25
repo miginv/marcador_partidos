@@ -43,8 +43,6 @@ def _dbg(*a):
 COLOR_LOCAL = [0, 0, 255]
 COLOR_VISIT = [255, 0, 0]
 POLL_LIVE = 20        # segundos entre sondeos con partido en juego
-if RELAY:
-    POLL_LIVE = 6     # el servidor propio refresca cada 5 s y no hay riesgo de baneo
 POLL_ESPERA = 60      # segundos entre sondeos mientras el partido no ha empezado
 ESTADO_FILE = "estado.json"
 CONFIG_FILE = "config.json"
