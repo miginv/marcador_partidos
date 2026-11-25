@@ -116,6 +116,88 @@ def fin_forzado():
         return set()
 
 
+_PUNTOS = {"CANASTA-1P": 1, "CANASTA-2P": 2, "CANASTA-3P": 3}
+
+
+def bajar_partido(hid):
+    """JSON completo del partido (una sola peticion; solo se usa al acabar)."""
+    body = fbm._urlencode({"id_dispositivo": fbm._sid, "key": fbm._key,
+                           "accion": "obtenerPartido", "id_partido": hid})
+    s = _ssl_connect("v2/envivo/partido.ashx", body)
+    b = b""
+    try:
+        while True:
+            c = s.recv(65536)
+            if not c:
+                break
+            b += c
+    finally:
+        s.close()
+    return json.loads(b[b.find(b"\r\n\r\n") + 4:])
+
+
+def estadisticas(hid):
+    """Estadisticas por jugador a partir del acta en directo. La FBM solo apunta canastas
+    (1, 2 y 3), tiros libres fallados, faltas, cambios y tiempos muertos: no hay rebotes,
+    asistencias, robos ni tapones."""
+    d = bajar_partido(hid)
+    pd = d.get("partido") or {}
+    ott = d.get("EnVivoJugadoresOTT") or {}
+    hist = (d.get("envivo") or {}).get("historialacciones") or []
+    equipos = {}
+    for lado, ide, nom, lst in (("local", pd.get("idlocal"), pd.get("local"), ott.get("JugadoresEnVivoLocal")),
+                                ("visit", pd.get("idvisitante"), pd.get("visitante"), ott.get("JugadoresEnVivoVisitante"))):
+        equipos[int(ide or 0)] = {"lado": lado, "nombre": nom or "", "pts": 0, "jug": {
+            str(j.get("IdJugador")): {"nombre": j.get("Nombre", ""), "dorsal": "", "pts": 0, "t1": 0, "t1i": 0,
+                                      "t2": 0, "t3": 0, "f": 0, "juega": False}
+            for j in (lst or [])}}
+    for a in hist:
+        if str(a.get("eliminado")) == "True":
+            continue
+        eq = equipos.get(int(a.get("equipo_id") or 0))
+        cid = str(a.get("componente_id") or "")
+        if not eq or cid in ("", "-1"):
+            continue
+        j = eq["jug"].setdefault(cid, {"nombre": "", "dorsal": "", "pts": 0, "t1": 0, "t1i": 0,
+                                       "t2": 0, "t3": 0, "f": 0, "juega": False})
+        if str(a.get("dorsal") or "-1") != "-1":
+            j["dorsal"] = str(a["dorsal"])
+        t = a.get("accion_tipo")
+        if t in _PUNTOS:
+            j["pts"] += _PUNTOS[t]
+            eq["pts"] += _PUNTOS[t]
+            j["juega"] = True
+            if t == "CANASTA-1P":
+                j["t1"] += 1
+                j["t1i"] += 1
+            else:
+                j["t%d" % _PUNTOS[t]] += 1
+        elif t == "TIRO1-FALLADO":
+            j["t1i"] += 1
+            j["juega"] = True
+        elif t == "FALTA-COMETIDA":
+            j["f"] += 1
+            j["juega"] = True
+        elif t == "CAMBIO-JUGADOR-ENTRA":
+            j["juega"] = True
+    for lst in ((d.get("envivo") or {}).get("jugadoresenpistalocal") or [],
+                (d.get("envivo") or {}).get("jugadoresenpistavisitante") or []):
+        for x in lst:
+            eq = equipos.get(int(x.get("idequipo") or 0))
+            if eq:
+                for j in eq["jug"].values():
+                    if j["dorsal"] == str(x.get("dorsal")):
+                        j["juega"] = True
+    out = {"local": {}, "visit": {}, "rl": pd.get("tanteo_local"), "rv": pd.get("tanteo_visitante"),
+           "parciales": [[p.get("tanteo_periodo_local"), p.get("tanteo_periodo_visitante")]
+                         for p in pd.get("periodos") or []],
+           "numperiodos": pd.get("numperiodos")}
+    for eq in equipos.values():
+        jug = sorted(eq["jug"].values(), key=lambda j: (-j["pts"], int(j["dorsal"]) if j["dorsal"].isdigit() else 999))
+        out[eq["lado"]] = {"nombre": eq["nombre"], "jugadores": jug}
+    return out
+
+
 MINIBASKET = ("benj", "alev", "mini", "premini")   # categorias de 6 periodos
 
 
@@ -181,6 +263,11 @@ def main():
             log("[PUB]", k, mk["rl"], "-", mk["rv"], mk["cuarto"], mk["tiempo"], mk["estado"])
             if mk["estado"] == "FINALIZADO":
                 st["fin"] = True
+                try:
+                    publicar("/m/%s_stats.json" % k, estadisticas(st["hid"]))
+                    log("[STATS]", k, "publicadas")
+                except Exception as e:
+                    log("[STATS] error", k, e)
             vivo = mk["tiempo"] or mk["rl"] or mk["rv"]
             st["prox"] = ahora + (POLL_VIVO if vivo else POLL_ESPERA)
         time.sleep(1)
