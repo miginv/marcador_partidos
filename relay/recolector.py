@@ -21,7 +21,7 @@ RELAY = os.environ.get("RELAY_URL", "http://127.0.0.1:8080").rstrip("/")
 TOKEN = os.environ.get("RELAY_TOKEN") or open(os.path.join(DIR, "token.txt")).read().strip()
 PARTIDOS_URL = os.environ.get("PARTIDOS_URL",
                               "https://raw.githubusercontent.com/miginv/marcador_partidos/main/partidos.json")
-POLL_VIVO = int(os.environ.get("POLL_VIVO", 15))     # s entre consultas a la FBM en juego
+POLL_VIVO = int(os.environ.get("POLL_VIVO", 5))     # s entre consultas a la FBM en juego
 POLL_ESPERA = 60      # s antes de empezar / sin encontrar
 ANTES_MIN = 20        # empieza a seguir un partido 20 min antes
 MAX_MIN = 150         # pasado esto sin FINALIZADO se deja
