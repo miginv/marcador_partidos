@@ -3,6 +3,30 @@
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
+   "ts": 1795626000,
+   "fecha": "25/11/2026",
+   "hora": "18:00",
+   "local": "C.B. CIUDAD DE MÓSTOLES",
+   "visit": "SALTIUM ALCORCÓN BASKET \"A\"",
+   "campo": "LOS ROSALES, PABELLON (Pista 1)",
+   "categoria": "Benj Mas 1ºaño LIGA MARCO ALDANY",
+   "notif": "394999",
+   "buscar": "mostoles",
+   "skip": 850
+  },
+  {
+   "ts": 1795629600,
+   "fecha": "25/11/2026",
+   "hora": "19:00",
+   "local": "FEMENINO ALCORCON A",
+   "visit": "CIUDAD DE MÓSTOLES",
+   "campo": "LA CANALEJA, PABELLON PISTA 2",
+   "categoria": "Infantil Femenino LIGA AHORRAMAS - ORO",
+   "notif": "375914",
+   "buscar": "mostoles",
+   "skip": 850
+  },
+  {
    "ts": 1795633200,
    "fecha": "25/11/2026",
    "hora": "20:00",
