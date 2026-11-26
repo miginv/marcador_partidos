@@ -5,7 +5,6 @@
 # "led_spi": false en config.json se usa neopixel (RMT).
 import json
 import time
-import micropython
 import machine
 import my_shared
 from awtrix_font import FONT
@@ -43,7 +42,6 @@ class _SpiLeds:
     def __init__(self, n, mosi, sck):
         self.n = n
         self.buf = bytearray(n * 3)          # GRB
-        self.out = bytearray(n * 9 + 40)
         lut = bytearray(256 * 3)
         for v in range(256):
             bits = 0
@@ -52,7 +50,8 @@ class _SpiLeds:
             lut[v * 3] = (bits >> 16) & 0xFF
             lut[v * 3 + 1] = (bits >> 8) & 0xFF
             lut[v * 3 + 2] = bits & 0xFF
-        self.lut = lut
+        self.t3 = [bytes(lut[v * 3:v * 3 + 3]) for v in range(256)]
+        self.cero = bytes(40)
         self.spi = machine.SPI(1, baudrate=2400000, polarity=0, phase=0, bits=8,
                                firstbit=machine.SPI.MSB, sck=machine.Pin(sck),
                                mosi=machine.Pin(mosi), miso=None)
@@ -70,23 +69,10 @@ class _SpiLeds:
         for i in range(self.n):
             self[i] = c
 
-    @micropython.viper
-    def _encode(self):
-        src = ptr8(self.buf)
-        dst = ptr8(self.out)
-        lut = ptr8(self.lut)
-        n = int(len(self.buf))
-        k = 0
-        for i in range(n):
-            v = src[i] * 3
-            dst[k] = lut[v]
-            dst[k + 1] = lut[v + 1]
-            dst[k + 2] = lut[v + 2]
-            k += 3
-
     def write(self):
-        self._encode()
-        self.spi.write(self.out)
+        # sin viper (no esta en todas las versiones de MicroPython): tabla de 3 bytes por valor
+        t = self.t3
+        self.spi.write(b"".join([t[v] for v in self.buf]) + self.cero)
 
 
 np = None
