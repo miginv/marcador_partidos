@@ -70,9 +70,11 @@ class _SpiLeds:
             self[i] = c
 
     def write(self):
-        # sin viper (no esta en todas las versiones de MicroPython): tabla de 3 bytes por valor
+        # sin viper (no esta en todas las versiones de MicroPython): tabla de 3 bytes por valor.
+        # Ceros tambien delante: la linea queda en reposo antes del primer bit (si no, el
+        # primer LED puede encenderse solo)
         t = self.t3
-        self.spi.write(b"".join([t[v] for v in self.buf]) + self.cero)
+        self.spi.write(self.cero + b"".join([t[v] for v in self.buf]) + self.cero)
 
 
 np = None

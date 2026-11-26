@@ -131,24 +131,42 @@ def grande(icono, segundos, interrumpir=None):
 
 
 _reloj = [None]
+ROJO_CAL = (255, 0, 0)
+
+
+def _cifras(txt, x, base, color):
+    """Digitos en celdas fijas de 3 px con 1 px de separacion (el "1" centrado)."""
+    for ch in txt:
+        w = pantalla16.ancho_car(ch)
+        pantalla16.texto(ch, x + (3 - w + 1) // 2 if w < 3 else x, base, color)
+        x += 4
 
 
 def reloj(forzar=False):
-    """Horas arriba y minutos abajo, en blanco; un punto parpadea cada segundo."""
+    """Arriba la fecha como un calendario de 16x8 (cabecera roja, dia y mes en blanco);
+    abajo la hora HH MM."""
     if sistema16.hora_ok[0]:
         lt = time.localtime(sistema16.ahora_local())
-        clave = ("%02d" % lt[3], "%02d" % lt[4], lt[5] % 2)
+        clave = ("%02d" % lt[2], "%02d" % lt[1], "%02d" % lt[3], "%02d" % lt[4])
     else:
-        clave = ("--", "--", 0)
+        clave = ("--", "--", "--", "--")
     if clave == _reloj[0] and not forzar:
         return
     _reloj[0] = clave
-    hh, mm, seg = clave
+    dia, mes, hh, mm = clave
     pantalla16.limpiar()
-    pantalla16.texto(hh, (16 - pantalla16.ancho(hh)) // 2, pantalla16.FILA1, BLANCO)
-    pantalla16.texto(mm, (16 - pantalla16.ancho(mm)) // 2, pantalla16.FILA2, BLANCO)
-    if seg:
-        pantalla16.pixel(15, 15, pantalla16.escala((0, 120, 255)))
+    rojo = pantalla16.escala(ROJO_CAL)
+    for x in range(16):                       # cabecera del calendario (2 filas)
+        pantalla16.pixel(x, 1, rojo)
+        if x not in (3, 12):                  # huecos de las anillas
+            pantalla16.pixel(x, 0, rojo)
+    _cifras(dia, 0, 7, BLANCO)
+    _cifras(mes, 9, 7, BLANCO)
+    punto = pantalla16.escala(ROJO_CAL)
+    pantalla16.pixel(7, 7, punto)
+    pantalla16.pixel(8, 7, punto)
+    _cifras(hh, 0, pantalla16.FILA2, BLANCO)
+    _cifras(mm, 9, pantalla16.FILA2, BLANCO)
     pantalla16.mostrar()
 
 
