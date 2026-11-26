@@ -142,29 +142,36 @@ def _cifras(txt, x, base, color):
         x += 4
 
 
+def _calendario(dia):
+    """Icono 8x8 centrado arriba: hoja de calendario (cabecera roja con anillas, hoja blanca)
+    con el dia en hueco (LED apagados), con el mismo brillo que los iconos GIF."""
+    x0 = 4
+    rojo = pantalla16.escala(ROJO_CAL, GIF_BRILLO)
+    blanco = pantalla16.escala(BLANCO, GIF_BRILLO)
+    for x in range(8):
+        if x not in (1, 6):
+            pantalla16.pixel(x0 + x, 0, rojo)
+        pantalla16.pixel(x0 + x, 1, rojo)
+        for y in range(2, 8):
+            pantalla16.pixel(x0 + x, y, blanco)
+    negro = (0, 0, 0)
+    w = pantalla16.ancho(dia)
+    pantalla16.texto(dia, x0 + (8 - w + 1) // 2, 6, None, xmin=x0, xmax=x0 + 8, c=negro)
+
+
 def reloj(forzar=False):
-    """Arriba la fecha como un calendario de 16x8 (cabecera roja, dia y mes en blanco);
-    abajo la hora HH MM."""
+    """Arriba el icono del calendario con el dia; abajo la hora HH MM."""
     if sistema16.hora_ok[0]:
         lt = time.localtime(sistema16.ahora_local())
-        clave = ("%02d" % lt[2], "%02d" % lt[1], "%02d" % lt[3], "%02d" % lt[4])
+        clave = (str(lt[2]), "%02d" % lt[3], "%02d" % lt[4])
     else:
-        clave = ("--", "--", "--", "--")
+        clave = ("", "--", "--")
     if clave == _reloj[0] and not forzar:
         return
     _reloj[0] = clave
-    dia, mes, hh, mm = clave
+    dia, hh, mm = clave
     pantalla16.limpiar()
-    rojo = pantalla16.escala(ROJO_CAL)
-    for x in range(16):                       # cabecera del calendario (2 filas)
-        pantalla16.pixel(x, 1, rojo)
-        if x not in (3, 12):                  # huecos de las anillas
-            pantalla16.pixel(x, 0, rojo)
-    _cifras(dia, 0, 7, BLANCO)
-    _cifras(mes, 9, 7, BLANCO)
-    punto = pantalla16.escala(ROJO_CAL)
-    pantalla16.pixel(7, 7, punto)
-    pantalla16.pixel(8, 7, punto)
+    _calendario(dia)
     _cifras(hh, 0, pantalla16.FILA2, BLANCO)
     _cifras(mm, 9, pantalla16.FILA2, BLANCO)
     pantalla16.mostrar()

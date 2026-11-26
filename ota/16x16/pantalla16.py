@@ -143,9 +143,11 @@ def ancho(t):
     return sum(ancho_car(c) + 1 for c in t) - 1 if t else 0
 
 
-def texto(t, x, base, color, xmin=0, xmax=W):
-    """Pinta t con la letra mas a la izquierda en x y la fila de abajo en base."""
-    c = escala(color)
+def texto(t, x, base, color, xmin=0, xmax=W, c=None):
+    """Pinta t con la letra mas a la izquierda en x y la fila de abajo en base
+    (c = color ya escalado, p. ej. (0, 0, 0) para texto en hueco)."""
+    if c is None:
+        c = escala(color)
     for ch in t:
         ch = _SIN_ACENTO.get(ch, ch)
         filas = FONT.get(ch)
