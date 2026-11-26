@@ -1,0 +1,110 @@
+# Reloj de posesion. La Raspberry de la consola MONDO manda por UDP (puerto 4210):
+#   "POS R <reloj>"          el reloj del partido esta en marcha (cada trama de la MONDO)
+#   "POS S <atras> <reloj>"  el reloj se ha parado hace <atras> decimas
+#   "POS H <reloj>"          sigue conectada, reloj parado (cada segundo)
+#   "POS 24" / "POS 14"      reseteo de la posesion
+#   "POS OFF"                fin: la pantalla vuelve a su modo normal
+# <reloj> = decimas que quedan en el reloj del partido (-1 si no se sabe). La placa lleva la
+# cuenta atras: corre mientras llegan "R" y se congela con "S" (o si deja de recibir "R").
+# Si el reloj del partido tiene menos tiempo que la posesion, la posesion se apaga (FIBA).
+import time
+import pantalla16
+import fuente16
+
+COLOR = (255, 0, 0)
+ACTIVO_MS = 5000        # sin nada de la Raspberry en 5 s se sale del modo posesion
+SIN_R_MS = 1500         # en marcha y sin "R" en 1,5 s: se congela (Raspberry caida)
+
+
+class Posesion:
+    def __init__(self):
+        self.ms = 24000
+        self.corre = False
+        self.t_ref = 0
+        self.t_msg = None
+        self.t_r = 0
+        self.reloj = -1
+        self.pintado = None
+
+    def activo(self):
+        return self.t_msg is not None and time.ticks_diff(time.ticks_ms(), self.t_msg) < ACTIVO_MS
+
+    def _congelar(self, en_ticks):
+        if self.corre:
+            self.ms = max(0, self.ms - time.ticks_diff(en_ticks, self.t_ref))
+            self.corre = False
+
+    def mensaje(self, txt):
+        """Procesa una linea "POS ...". Devuelve True si era de posesion."""
+        p = txt.split()
+        if not p or p[0] != "POS":
+            return False
+        ahora = time.ticks_ms()
+        if len(p) < 2:
+            return True
+        c = p[1]
+        if c == "OFF":
+            self._congelar(ahora)
+            self.t_msg = None
+            self.pintado = None
+            return True
+        self.t_msg = ahora
+        if c in ("24", "14"):
+            if self.corre:
+                self.t_ref = ahora
+            self.ms = int(c) * 1000
+        elif c == "R":
+            self._reloj(p, 2)
+            if not self.corre:
+                self.corre = True
+                self.t_ref = ahora
+            self.t_r = ahora
+        elif c == "S":
+            atras = 0
+            try:
+                atras = int(p[2]) * 100
+            except (IndexError, ValueError):
+                pass
+            self._reloj(p, 3)
+            if self.corre:
+                self._congelar(time.ticks_add(ahora, -atras))
+        elif c == "H":
+            self._reloj(p, 2)
+        return True
+
+    def _reloj(self, p, i):
+        try:
+            self.reloj = int(p[i])
+        except (IndexError, ValueError):
+            pass
+
+    def valor(self):
+        ahora = time.ticks_ms()
+        if self.corre and time.ticks_diff(ahora, self.t_r) > SIN_R_MS:
+            self._congelar(time.ticks_add(self.t_r, 1000))
+        if self.corre:
+            # la MONDO manda una trama por segundo (cada 0,1 s en el ultimo minuto): sin la
+            # siguiente no se adelanta mas de eso, asi al parar casi no hay que corregir
+            tope = time.ticks_diff(self.t_r, self.t_ref) + (1050 if self.reloj >= 600 or self.reloj < 0 else 150)
+            return max(0, self.ms - min(time.ticks_diff(ahora, self.t_ref), tope))
+        return self.ms
+
+    def texto(self):
+        v = self.valor()
+        if 0 <= self.reloj and self.reloj * 100 < v:
+            return ""                         # queda menos de partido que de posesion
+        d = v // 100                          # decimas
+        if d >= 100:
+            return str((d + 9) // 10)         # 24..10 redondeando hacia arriba
+        return "%d.%d" % (d // 10, d % 10)
+
+    def pintar(self, forzar=False):
+        t = self.texto()
+        if t == self.pintado and not forzar:
+            return
+        self.pintado = t
+        pantalla16.limpiar()
+        if t:
+            cols = fuente16.texto(t)
+            pantalla16.columnas(cols, COLOR, (16 - len(cols)) // 2, 0)
+        pantalla16.mostrar()

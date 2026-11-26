@@ -1,0 +1,17 @@
+{
+ "version": "1.0.0",
+ "files": [
+  "boot.py",
+  "main16.py",
+  "pantalla16.py",
+  "fuente16.py",
+  "awtrix_font.py",
+  "gif16.py",
+  "sistema16.py",
+  "mensajes16.py",
+  "posesion16.py",
+  "marcador16.py",
+  "fbm_http.py",
+  "wifi_portal.py"
+ ]
+}
