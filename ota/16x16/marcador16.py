@@ -64,6 +64,32 @@ def digitos(txt, hueco=1, hueco_puntos=1):
     return cols
 
 
+MAS = [1 << 3, 0b0011100, 1 << 3]                       # "+" de 3 px (7 de alto)
+ALMOHADILLA = [0b0010100, 0b0111110, 0b0010100, 0b0111110]   # "#" de 4 px
+CANASTA_QUIETO_MS = 1500     # el nombre se ve quieto antes del scroll
+CANASTA_PASO_MS = 70         # ms por columna de scroll
+CANASTA_CORTO_MS = 3000      # nombre que cabe: lo que dura
+
+
+def cols_canasta(pts, dorsal):
+    """Primera fila de la canasta: "+3 #2"; si no cabe (dorsal de 2 cifras), "+3" a la
+    izquierda y "12" a la derecha. Devuelve [(cols, x)]."""
+    mas = MAS + [0] + digitos(pts)
+    num = ALMOHADILLA + [0] + digitos(dorsal)
+    if len(mas) + 1 + len(num) <= 16:
+        return [(mas, 0), (num, 16 - len(num))]
+    d = digitos(dorsal)
+    return [(mas, 0), (d, 16 - len(d))]
+
+
+def parse_jugada(txt):
+    """'+3 LUIS #9' -> ('3', 'LUIS', '9'); None si no es canasta."""
+    p = (txt or "").split()
+    if len(p) < 2 or not p[0].startswith("+") or not p[-1].startswith("#"):
+        return None
+    return p[0][1:], " ".join(p[1:-1]), p[-1][1:]
+
+
 def _segundos(t):
     try:
         mm, ss = t.split(":")
@@ -93,6 +119,8 @@ class Marcador:
         self.nombres_hasta = None
         self.desc_prev = False
         self.pintado = None
+        self.canasta = None      # (pts, nombre, dorsal, color, ticks de inicio)
+        self.jug_vista = None
 
     # ---------- lista de partidos ----------
 
@@ -200,6 +228,13 @@ class Marcador:
             if m.get("descanso") and not self.desc_prev:
                 self.nombres_hasta = time.ticks_add(time.ticks_ms(), NOMBRES_MS)
             self.desc_prev = bool(m.get("descanso"))
+            jg = m.get("jugada")
+            if jg and jg.get("id") != self.jug_vista:
+                primera = self.jug_vista is None
+                self.jug_vista = jg.get("id")
+                c = parse_jugada(jg.get("txt"))
+                if c and not primera:        # la que ya estaba al empezar a seguir no se ensena
+                    self.canasta = c + (self.col_l if jg.get("local") else self.col_v, time.ticks_ms())
             if m.get("estado") == "FINALIZADO" and self.fin_t is None:
                 self.fin_t = time.time()
                 print("[MARCADOR] FINALIZADO", m.get("rl"), "-", m.get("rv"))
@@ -280,6 +315,8 @@ class Marcador:
                 pantalla16.mostrar()
                 self.pintado = clave
             return
+        if self.canasta and self._pintar_canasta():
+            return
         rl, rv = str(m.get("rl", 0)), str(m.get("rv", 0))
         q = m.get("cuarto") or "Q1"
         try:
@@ -308,6 +345,35 @@ class Marcador:
             pantalla16.columnas(cols, AMBAR, (16 - len(cols)) // 2, 8)
             self._guiones(nq)
         pantalla16.mostrar()
+
+    def _pintar_canasta(self):
+        """Canasta: arriba "+3 #2" y abajo el nombre (quieto y luego en scroll), en el color
+        del equipo. False cuando ha terminado."""
+        pts, nombre, dorsal, color, t0 = self.canasta
+        el = time.ticks_diff(time.ticks_ms(), t0)
+        w = pantalla16.ancho(nombre)
+        if w <= 16:
+            if el > CANASTA_CORTO_MS:
+                self.canasta = None
+                self.pintado = None
+                return False
+            x = (16 - w) // 2
+        else:
+            x = -max(0, el - CANASTA_QUIETO_MS) // CANASTA_PASO_MS
+            if x < -w:
+                self.canasta = None
+                self.pintado = None
+                return False
+        clave = ("C", pts, dorsal, x)
+        if clave == self.pintado:
+            return True
+        self.pintado = clave
+        pantalla16.limpiar()
+        for cols, cx in cols_canasta(pts, dorsal):
+            pantalla16.columnas(cols, color, cx, 0)
+        pantalla16.texto(nombre, x, pantalla16.FILA2, color)
+        pantalla16.mostrar()
+        return True
 
     def paso(self):
         """Una vuelta del bucle principal en modo marcador."""
