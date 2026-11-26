@@ -3,16 +3,40 @@
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
-   "ts": 1795640400,
-   "fecha": "25/11/2026",
-   "hora": "22:00",
-   "local": "SERRACINES MASCULINO A",
-   "visit": "TE VI Y NO TE LA DI",
-   "campo": "ESCUELA IDEO P2",
+   "ts": 1795719900,
+   "fecha": "26/11/2026",
+   "hora": "20:05",
+   "local": "LA QUINTA DE PEPE",
+   "visit": "PARLA BASQUET VETERANOS",
+   "campo": "BUEN CONSEJO 3",
+   "categoria": "FreeBasket O45 Masculina",
+   "notif": "406695",
+   "buscar": "veteranos",
+   "skip": 0
+  },
+  {
+   "ts": 1795723500,
+   "fecha": "26/11/2026",
+   "hora": "21:05",
+   "local": "DIOSES DEL OLIMPO",
+   "visit": "VALLEKAS BASKET",
+   "campo": "CAJA MAGICA 1",
+   "categoria": "FreeBasket Masculina",
+   "notif": "406469",
+   "buscar": "vallekas",
+   "skip": 150
+  },
+  {
+   "ts": 1795725600,
+   "fecha": "26/11/2026",
+   "hora": "21:40",
+   "local": "VILLANUEVA DE LA CAÑADA VETERANOS",
+   "visit": "MIRAOBRAS",
+   "campo": "MATER SALVATORIS P3",
    "categoria": "FreeBasket O35 Masculina",
-   "notif": "406519",
-   "buscar": "serracines",
-   "skip": 100
+   "notif": "406530",
+   "buscar": "veteranos",
+   "skip": 0
   }
  ]
 }
