@@ -10,6 +10,7 @@ import json
 import time
 import fbm_http
 import fuente16
+from font_narrow import FONT_NARROW
 import pantalla16
 import sistema16
 
@@ -80,6 +81,29 @@ def cols_canasta(pts, dorsal):
         return [(mas, 0), (num, 16 - len(num))]
     d = digitos(dorsal)
     return [(mas, 0), (d, 16 - len(d))]
+
+
+GRANDE_CICLO_MS = 12000     # en juego: 8 s reloj + tanteo, 4 s solo el tanteo en grande
+GRANDE_MS = 4000
+
+
+def grandes(txt):
+    """Columnas (8 px de alto) con los digitos de 5 px del 32x8 (font_narrow), sin las
+    columnas vacias del glifo (el "1" ocupa 2 px) y 1 px entre cifras."""
+    cols = []
+    for ch in txt:
+        g = FONT_NARROW.get(ch)
+        if not g:
+            continue
+        cc = [sum(1 << r for r in range(8) if g[r] & (0x80 >> c)) for c in range(5)]
+        while cc and not cc[0]:
+            cc.pop(0)
+        while cc and not cc[-1]:
+            cc.pop()
+        if cols:
+            cols.append(0)
+        cols += cc
+    return cols
 
 
 def parse_jugada(txt):
@@ -324,6 +348,17 @@ class Marcador:
         except ValueError:
             nq = 1
         fin = m.get("estado") == "FINALIZADO"
+        if time.ticks_ms() % GRANDE_CICLO_MS >= GRANDE_CICLO_MS - GRANDE_MS:
+            # pantalla del resultado: local arriba a la izquierda, visitante abajo a la derecha
+            clave = ("G", rl, rv, self.col_l)
+            if clave != self.pintado:
+                self.pintado = clave
+                pantalla16.limpiar()
+                gl, gv = grandes(rl), grandes(rv)
+                pantalla16.columnas(gl, self.col_l, 0, 0)
+                pantalla16.columnas(gv, self.col_v, 16 - len(gv), 8)
+                pantalla16.mostrar()
+            return
         if fin:
             reloj = "FIN"
         else:
