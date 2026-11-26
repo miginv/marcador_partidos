@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-11-25 13:00",
+ "actualizado": "2026-11-26 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
   {
@@ -37,6 +37,42 @@
    "notif": "406530",
    "buscar": "veteranos",
    "skip": 0
+  },
+  {
+   "ts": 1795797900,
+   "fecha": "27/11/2026",
+   "hora": "17:45",
+   "local": "RICOPIA FUNBAL ALCALA CBJA \"A\"",
+   "visit": "C.B. COSLADA",
+   "campo": "SAN GABRIEL, COLEGIO",
+   "categoria": "Infantil Masculino LIGA AHORRAMAS - PLATA/BRONCE",
+   "notif": "376394",
+   "buscar": "coslada",
+   "skip": 650
+  },
+  {
+   "ts": 1795804200,
+   "fecha": "27/11/2026",
+   "hora": "19:30",
+   "local": "RICOPIA FUNBAL ALCALA CBJA \"B\"",
+   "visit": "SAN AGUSTIN MADRID",
+   "campo": "MIGUEL HERNANDEZ, PABELLON COLEGIO",
+   "categoria": "Cadete Femenino LIGA AHORRAMAS - PLATA/BRONCE",
+   "notif": "375617",
+   "buscar": "alcala",
+   "skip": 1500
+  },
+  {
+   "ts": 1795804200,
+   "fecha": "27/11/2026",
+   "hora": "19:30",
+   "local": "RICOPIA FUNBAL ALCALA CBJA \"A\"",
+   "visit": "C.B. LAS ROZAS \"A\"",
+   "campo": "SAN GABRIEL, COLEGIO",
+   "categoria": "Infantil Femenino LIGA AHORRAMAS - ORO",
+   "notif": "375943",
+   "buscar": "alcala",
+   "skip": 1500
   }
  ]
 }
