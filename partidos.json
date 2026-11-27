@@ -1,43 +1,7 @@
 {
- "actualizado": "2026-11-26 13:00",
+ "actualizado": "2026-11-27 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795719900,
-   "fecha": "26/11/2026",
-   "hora": "20:05",
-   "local": "LA QUINTA DE PEPE",
-   "visit": "PARLA BASQUET VETERANOS",
-   "campo": "BUEN CONSEJO 3",
-   "categoria": "FreeBasket O45 Masculina",
-   "notif": "406695",
-   "buscar": "veteranos",
-   "skip": 0
-  },
-  {
-   "ts": 1795723500,
-   "fecha": "26/11/2026",
-   "hora": "21:05",
-   "local": "DIOSES DEL OLIMPO",
-   "visit": "VALLEKAS BASKET",
-   "campo": "CAJA MAGICA 1",
-   "categoria": "FreeBasket Masculina",
-   "notif": "406469",
-   "buscar": "vallekas",
-   "skip": 150
-  },
-  {
-   "ts": 1795725600,
-   "fecha": "26/11/2026",
-   "hora": "21:40",
-   "local": "VILLANUEVA DE LA CAÑADA VETERANOS",
-   "visit": "MIRAOBRAS",
-   "campo": "MATER SALVATORIS P3",
-   "categoria": "FreeBasket O35 Masculina",
-   "notif": "406530",
-   "buscar": "veteranos",
-   "skip": 0
-  },
   {
    "ts": 1795797900,
    "fecha": "27/11/2026",
@@ -73,6 +37,78 @@
    "notif": "375943",
    "buscar": "alcala",
    "skip": 1500
+  },
+  {
+   "ts": 1795854600,
+   "fecha": "28/11/2026",
+   "hora": "09:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "PATROCINIO SAN JOSE",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Alv Mas 2ºaño LIGA MARCO ALDANY - ORO",
+   "notif": "394187",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795867200,
+   "fecha": "28/11/2026",
+   "hora": "13:00",
+   "local": "VIRGEN DE ATOCHA B",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "VIRGEN DE ATOCHA, COLEGIO",
+   "categoria": "Infantil Fem. Pref.",
+   "notif": "404438",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795873500,
+   "fecha": "28/11/2026",
+   "hora": "14:45",
+   "local": "MOVISTAR ESTUDIANTES ETXARRI",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "RAMIRO DE MAEZTU 1, INSTITUTO",
+   "categoria": "Alv Fem 2ºaño LIGA MARCO ALDANY - PLATA",
+   "notif": "395568",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795883400,
+   "fecha": "28/11/2026",
+   "hora": "17:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "ABACO 011",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Cadete Fem. Pref.",
+   "notif": "391557",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795886100,
+   "fecha": "28/11/2026",
+   "hora": "18:15",
+   "local": "VILLANUEVA DE LA CAÑADA",
+   "visit": "COSLADA C.B. SERRACINES",
+   "campo": "SANTIAGO APOSTOL, PDVO. MPAL.",
+   "categoria": "Junior Masc. Pref.",
+   "notif": "378665",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795889700,
+   "fecha": "28/11/2026",
+   "hora": "19:15",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "ARAVACA BASKET AMARILLO",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Cadete Masc. Pref.",
+   "notif": "390568",
+   "buscar": "serracines",
+   "skip": 100
   }
  ]
 }
