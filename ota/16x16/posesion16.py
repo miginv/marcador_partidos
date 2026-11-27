@@ -4,6 +4,8 @@
 #   "POS H <reloj>"          sigue conectada, reloj parado (cada segundo)
 #   "POS 24" / "POS 14"      reseteo de la posesion
 #   "POS OFF"                fin: la pantalla vuelve a su modo normal
+#   "POS M"                  cambia la vista (se guarda): 1 = posesion grande en 16x16,
+#                            2 = dos lineas, arriba el reloj del partido y abajo la posesion
 # Cada linea puede llevar al final " #<n>" (numero de secuencia): en modo pabellon llega la
 # misma linea por WiFi y por Bluetooth y solo vale la primera copia (linea()).
 # <reloj> = decimas que quedan en el reloj del partido (-1 si no se sabe). La placa lleva la
@@ -14,6 +16,16 @@ import pantalla16
 import fuente16
 
 COLOR = (255, 0, 0)
+AMBAR = (255, 200, 0)   # reloj del partido (como en el marcador)
+VISTA_FICHERO = "vista16.txt"
+
+
+def _leer_vista():
+    try:
+        with open(VISTA_FICHERO) as f:
+            return 2 if f.read().strip() == "2" else 1
+    except OSError:
+        return 1
 ACTIVO_MS = 5000        # sin nada de la Raspberry en 5 s se sale del modo posesion
 SIN_R_MS = 1500         # en marcha y sin "R" en 1,5 s: se congela (Raspberry caida)
 SEQ_REINICIO_MS = 3000  # sin nada en 3 s se acepta cualquier secuencia (emisor reiniciado)
@@ -30,6 +42,7 @@ class Posesion:
         self.pintado = None
         self.seq = None
         self.t_seq = 0
+        self.vista = _leer_vista()
 
     def linea(self, txt):
         """Linea de WiFi o Bluetooth: descarta las copias repetidas (" #n") y la procesa."""
@@ -91,6 +104,14 @@ class Posesion:
                 self._congelar(time.ticks_add(ahora, -atras))
         elif c == "H":
             self._reloj(p, 2)
+        elif c == "M":
+            self.vista = 1 if self.vista == 2 else 2
+            self.pintado = None
+            try:
+                with open(VISTA_FICHERO, "w") as f:
+                    f.write(str(self.vista))
+            except OSError:
+                pass
         return True
 
     def _reloj(self, p, i):
@@ -121,11 +142,22 @@ class Posesion:
 
     def pintar(self, forzar=False):
         t = self.texto()
-        if t == self.pintado and not forzar:
+        r = self.reloj if self.vista == 2 else None
+        clave = (self.vista, t, r)
+        if clave == self.pintado and not forzar:
             return
-        self.pintado = t
+        self.pintado = clave
         pantalla16.limpiar()
-        if t:
+        if self.vista == 2:
+            # arriba (filas 0-6) el reloj del partido tal como lo manda la MONDO; abajo
+            # (filas 9-15) la posesion
+            if r is not None and r >= 0:
+                cols = fuente16.reloj7((r + 0.05) / 10)   # +0,05: floats de 32 bits
+                pantalla16.columnas(cols, AMBAR, (16 - len(cols)) // 2, 0)
+            if t:
+                cols = fuente16.posesion7(t)
+                pantalla16.columnas(cols, COLOR, (16 - len(cols)) // 2, 9)
+        elif t:
             cols = fuente16.texto(t)
             pantalla16.columnas(cols, COLOR, (16 - len(cols)) // 2, 0)
         pantalla16.mostrar()

@@ -2,8 +2,10 @@
 # los dos canales a la vez, WiFi (UDP 4210) y Bluetooth LE (ble16, lo arranca boot.py); las
 # copias repetidas se descartan por el numero de secuencia (posesion16.linea). Sin marcador
 # de la federacion, ni mensajes, ni GIF: con el Bluetooth no cabe todo en la memoria de la C3.
-# Sin emisor: reloj (dia y hora). Todo tiene que caber en los 64 KB con los que arranca
-# MicroPython (si crece, deja sin memoria a la WiFi): nada de GIF, ni HTTPS, ni OTA (ver boot).
+# Siempre muestra la posesion (24 al arrancar, preparada). No depende de la WiFi: la conecta en
+# segundo plano (sin esperar ni abrir portal) y, si no hay, sigue solo por Bluetooth.
+# Todo tiene que caber en los 64 KB con los que arranca MicroPython (si crece, deja sin
+# memoria a la WiFi): nada de GIF, ni HTTPS, ni OTA (ver boot).
 # API: GET /api/version, GET/POST /api/settings (BRI 0-100; PABELLON 0 = volver al modo
 # normal y reiniciar), POST /api/posesion {"cmd": ...}, POST /api/reboot.
 import gc
@@ -17,19 +19,63 @@ import sistema16
 import posesion16
 import ble16
 gc.collect()
-import reloj16
-gc.collect()
 
 PUERTO_UDP = 4210
 GC_MS = 1000
 WDT_MS = 90000
 
+WIFI_REINTENTO_MS = 20000    # sin WiFi: cada 20 s prueba la siguiente red guardada
+
 sta = network.WLAN(network.STA_IF)
 sistema16.leer_ajustes()
 pos = posesion16.Posesion()
 ble = ble16.activo
-_t = {"gc": 0, "rev": time.time()}
-modo = ["reloj"]
+_t = {"gc": 0, "wifi": 0, "red": 0, "ip": ""}
+modo = ["espera"]
+
+
+def _redes():
+    try:
+        with open("config.json") as f:
+            return [c for c in json.load(f).get("wifi_credentials", []) if c.get("ssid")]
+    except Exception:
+        return []
+
+
+REDES = _redes()
+
+
+def _wifi():
+    """Sin bloquear: lanza la conexion y vuelve; si a los 20 s no hay, prueba la siguiente."""
+    if sta.isconnected():
+        if not _t["ip"]:
+            _t["ip"] = sta.ifconfig()[0]
+            print("[WIFI] conectada", _t["ip"])
+        return
+    if _t["ip"]:
+        print("[WIFI] perdida")
+        _t["ip"] = ""
+    if not REDES or (_t["wifi"] and time.ticks_diff(time.ticks_ms(), _t["wifi"]) < WIFI_REINTENTO_MS):
+        return
+    _t["wifi"] = time.ticks_ms()
+    c = REDES[_t["red"] % len(REDES)]
+    _t["red"] += 1
+    try:
+        sta.active(True)
+        try:
+            sta.disconnect()
+        except Exception:
+            pass
+        sta.connect(c["ssid"], c.get("password", ""))
+    except Exception as e:
+        print("[WIFI]", e)
+
+
+sta.active(True)
+try:
+    network.hostname("marcador-" + "".join("%02x" % b for b in sta.config("mac")[-2:]))
+except Exception:
+    pass
 
 
 def version():
@@ -39,7 +85,7 @@ def version():
 def _estado():
     import esp32
     return {"tipo": "16x16", "version": version(), "modo": "pabellon-" + modo[0],
-            "ip": sta.ifconfig()[0], "ble": ble.nombre if ble else None,
+            "ip": _t["ip"], "vista": pos.vista, "ble": ble.nombre if ble else None,
             "ble_conectado": bool(ble and ble.conectados), "libre": gc.mem_free(),
             "heap": gc.mem_free() + gc.mem_alloc(),
             "sistema": sum(h[1] for h in esp32.idf_heap_info(esp32.HEAP_DATA))}
@@ -130,7 +176,6 @@ def _http():
                 sistema16.my_shared.BRIGHTNESS = b
                 sistema16.guardar_ajustes(brillo=b)
                 pos.pintado = None
-                reloj16.olvidar()
             _responder(cl, 200, json.dumps({"success": True, "PABELLON": 1,
                                             "BRI": int(sistema16.my_shared.BRIGHTNESS * 100)}))
         elif ruta.startswith("/api/version"):
@@ -157,7 +202,7 @@ except Exception as _e:
     wdt = None
     print("[WDT]", _e)
 pantalla16.clear()
-print("[PABELLON]", version(), "IP", sta.ifconfig()[0], "BLE", ble.nombre if ble else None,
+print("[PABELLON]", version(), "redes", len(REDES), "BLE", ble.nombre if ble else None,
       "libre", gc.mem_free())
 
 while True:
@@ -170,27 +215,13 @@ while True:
         _udp()
         _ble()
         _http()
-        if pos.activo():
-            if modo[0] != "posesion":
-                print("[MODO] posesion")
-                modo[0] = "posesion"
-                pos.pintado = None
-            pos.pintar()
-            time.sleep_ms(10)
-            continue
-        if modo[0] != "reloj":
-            print("[MODO] reloj")
-            modo[0] = "reloj"
-            reloj16.olvidar()
-        reloj16.reloj()
-        if time.time() - _t["rev"] >= 60:
-            _t["rev"] = time.time()
-            if not sta.isconnected():
-                import wifi_portal
-                wifi_portal.conectar()
-            if not sistema16.hora_ok[0] and sta.isconnected():
-                sistema16.sync_hora()
-        time.sleep_ms(20)
+        _wifi()
+        m = "posesion" if pos.activo() else "espera"
+        if m != modo[0]:
+            print("[MODO]", m)
+            modo[0] = m
+        pos.pintar()
+        time.sleep_ms(10)
     except Exception as e:
         import sys
         sys.print_exception(e)
