@@ -26,14 +26,12 @@ POLL_ESPERA = 60      # s antes de empezar / sin encontrar
 ANTES_MIN = 20        # empieza a seguir un partido 20 min antes
 MAX_MIN = 150         # pasado esto sin FINALIZADO se deja
 LISTA_SEG = 15 * 60
-# Retraso del reloj: la FBM da el tiempo de la ULTIMA accion y la hora del dia en que se apunto
-# (hora_acc); las pantallas descuentan lo pasado desde esa hora. El anotador apunta tarde y el
-# reloj de su tablet puede ir descuadrado, asi que el reloj de las pantallas va por detras del
-# real. Se corrige adelantando hora_acc RETRASO_SEG segundos (o "retraso" en la entrada del
-# partido en partidos.json), solo con el reloj en marcha: parado o en descanso no se toca.
-# No hace falta tocar las placas. Cada accion nueva se apunta en datos/retraso/<notif>.jsonl
-# (hora de llegada frente a hora_acc) para medir el retraso real y ajustar el valor.
-RETRASO_SEG = float(os.environ.get("RETRASO_SEG", 10))
+# Retraso del reloj: la FBM da el tiempo de la ULTIMA accion apuntada y el anotador la apunta
+# tarde (medido en pista: 15-20 s), asi que las pantallas iban por detras del reloj real. Con el
+# reloj en marcha se publica el tiempo RETRASO_SEG segundos menos (11:55 -> 11:40); parado
+# (falta, tiempo muerto...) o antes de empezar el cuarto se publica tal cual. "retraso" en la
+# entrada del partido en partidos.json lo cambia para ese partido. Las placas no se tocan.
+RETRASO_SEG = float(os.environ.get("RETRASO_SEG", 15))
 
 # --- adaptadores para usar gesdeportiva.py (MicroPython) en CPython ---
 sys.modules["ujson"] = json
@@ -62,62 +60,23 @@ fbm._ssl_connect = _ssl_connect
 _uid_orig = os.urandom
 
 
-try:
-    from zoneinfo import ZoneInfo
-    _TZ = ZoneInfo("Europe/Madrid")
-except Exception:
-    _TZ = None
-
-
-def _seg_dia(h):
-    """'hh:mm:ss[.fff]' -> segundos del dia, o None."""
-    try:
-        hh, mm, ss = h.split(":")[:3]
-        return int(hh) * 3600 + int(mm) * 60 + float(ss)
-    except Exception:
-        return None
-
-
-def _ahora_madrid(t):
-    lt = time.localtime(t) if _TZ is None else None
-    if lt:
-        return lt.tm_hour * 3600 + lt.tm_min * 60 + lt.tm_sec + (t % 1)
-    import datetime
-    d = datetime.datetime.fromtimestamp(t, _TZ)
-    return d.hour * 3600 + d.minute * 60 + d.second + d.microsecond / 1e6
-
-
-def corregir_retraso(p, k, mk, st, ahora):
-    """Apunta cada accion nueva y adelanta hora_acc para que el reloj de las pantallas no vaya
-    por detras."""
-    h = mk.get("hora_acc")
-    sd = _seg_dia(h) if h else None
-    clave_acc = (mk.get("cuarto"), mk.get("tiempo"), h)
-    if sd is not None and clave_acc != st.get("ult_acc"):
-        st["ult_acc"] = clave_acc
-        retraso = (_ahora_madrid(ahora) - sd + 43200) % 86400 - 43200
-        try:
-            os.makedirs(os.path.join(DIR, "datos", "retraso"), exist_ok=True)
-            with open(os.path.join(DIR, "datos", "retraso", "%s.jsonl" % k), "a") as f:
-                f.write(json.dumps({"t": round(ahora, 1), "hora_acc": h, "retraso": round(retraso, 1),
-                                    "cuarto": mk.get("cuarto"), "tiempo": mk.get("tiempo"),
-                                    "parado": mk.get("parado"), "descanso": mk.get("descanso"),
-                                    "rl": mk.get("rl"), "rv": mk.get("rv"),
-                                    "jugada": (mk.get("jugada") or {}).get("txt")},
-                                   ensure_ascii=False) + "\n")
-        except Exception as e:
-            log("[RETRASO] registro", e)
-        log("[RETRASO]", k, mk.get("cuarto"), mk.get("tiempo"), "hora_acc", h, "llega %+.1f s" % retraso)
+def corregir_retraso(p, mk):
+    """Resta el retraso al tiempo publicado solo con el reloj en marcha."""
     c = p.get("retraso", RETRASO_SEG)
     try:
-        c = float(c)
+        c = int(float(c))
     except (TypeError, ValueError):
         c = 0
-    if c and sd is not None and not mk.get("parado") and not mk.get("descanso"):
-        n = int(sd - c) % 86400
-        mk["hora_acc_fbm"] = h
-        mk["hora_acc"] = "%02d:%02d:%02d" % (n // 3600, n // 60 % 60, n % 60)
-        mk["retraso"] = c
+    t = mk.get("tiempo") or ""
+    if not c or mk.get("parado") or mk.get("descanso") or ":" not in t:
+        return
+    try:
+        mm, ss = t.split(":")
+        r = max(0, int(mm) * 60 + int(ss) - c)
+    except ValueError:
+        return
+    mk["tiempo_fbm"] = t
+    mk["tiempo"] = "%02d:%02d" % (r // 60, r % 60)
 
 
 def log(*a):
@@ -320,7 +279,7 @@ def main():
                 st["prox"] = ahora + 10
                 continue
             periodo(p, mk)
-            corregir_retraso(p, k, mk, st, ahora)
+            corregir_retraso(p, mk)
             if k in fin_forzado():
                 mk["estado"], mk["vivo"] = "FINALIZADO", False
                 log("[FIN] forzado a mano:", k)
