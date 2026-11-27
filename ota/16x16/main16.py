@@ -1,5 +1,6 @@
 # Pantalla 16x16: un solo programa con tres modos, sin reinicios entre ellos.
-#   1) posesion  si la Raspberry de la MONDO esta mandando (UDP 4210, ver posesion16)
+#   1) posesion  si el emisor de la MONDO esta mandando (UDP 4210 y/o Bluetooth LE, ver
+#                posesion16 y ble16; las lineas repetidas por los dos canales se descartan)
 #   2) marcador  si hay partido de la lista dentro de su ventana (servidor propio, relay.json)
 #   3) mensajes  el resto del tiempo: reloj + API HTTP tipo Awtrix (puerto 80)
 # API: POST /api/notify | /api/custom (mensaje), GET/POST /api/settings (BRI 0-100,
@@ -36,6 +37,30 @@ def version():
     return sistema16.version_local()
 
 
+# ---------- lineas de posesion (WiFi y Bluetooth) ----------
+
+_seq = {"n": None, "t": 0}
+SEQ_REINICIO_MS = 3000       # sin nada en 3 s se acepta cualquier numero (emisor reiniciado)
+
+
+def _linea_pos(linea):
+    """"POS ... #n": la misma linea llega por WiFi y por BLE; solo vale la primera."""
+    if " #" in linea:
+        linea, _, n = linea.rpartition(" #")
+        try:
+            n = int(n) & 0xFFFF
+        except ValueError:
+            n = None
+        ahora = time.ticks_ms()
+        if n is not None:
+            u = _seq["n"]
+            if (u is not None and time.ticks_diff(ahora, _seq["t"]) < SEQ_REINICIO_MS
+                    and not 0 < (n - u) & 0xFFFF < 0x8000):
+                return                    # repetida o vieja
+            _seq["n"], _seq["t"] = n, ahora
+    pos.mensaje(linea)
+
+
 # ---------- UDP (Raspberry de la MONDO) ----------
 
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,7 +85,7 @@ def _udp():
                 except OSError:
                     pass
             elif linea:
-                pos.mensaje(linea)
+                _linea_pos(linea)
 
 
 # ---------- HTTP ----------
@@ -170,7 +195,9 @@ def _atender(cl):
                                             "BRI": int(sistema16.my_shared.BRIGHTNESS * 100)}))
         elif ruta.startswith("/api/version"):
             _responder(cl, 200, json.dumps({"tipo": "16x16", "version": version(), "modo": modo_actual[0],
-                                            "relay": bool(marcador.url), "libre": gc.mem_free()}))
+                                            "relay": bool(marcador.url), "libre": gc.mem_free(),
+                                            "ble": ble[0].nombre if ble[0] else None,
+                                            "ble_conectado": bool(ble[0] and ble[0].conectados)}))
         elif metodo == "POST" and ruta.startswith("/api/posesion"):
             d = json.loads(cuerpo or "{}")
             pos.mensaje("POS " + str(d.get("cmd", "")))
@@ -203,8 +230,21 @@ def _http():
     _atender(cl)
 
 
+ble = [None]
+
+
+def _ble():
+    if ble[0]:
+        for d in ble[0].leer():
+            for linea in d.decode("utf-8", "ignore").split("\n"):
+                linea = linea.strip()
+                if linea:
+                    _linea_pos(linea)
+
+
 def atender():
     _udp()
+    _ble()
     _http()
 
 
@@ -242,11 +282,18 @@ if sta.isconnected():
     except Exception as _e:
         print("[OTA]", _e)
 _t["ota"] = _t["rev"] = time.time()
+try:                         # despues de la OTA: si el Bluetooth fallara, se puede corregir
+    import ble16
+    ble[0] = ble16.Ble("pos16-" + "".join("%02x" % b for b in sta.config("mac")[-2:]))
+except Exception as _e:
+    print("[BLE] no disponible:", _e)
+gc.collect()
 marcador = marcador16.Marcador()
 marcador.bajar_lista()
 modo_actual = ["mensajes"]
 _ip = sta.ifconfig()[0] if sta.isconnected() else ""
-print("[16x16]", version(), "IP", _ip, "relay", bool(marcador.url), "libre", gc.mem_free())
+print("[16x16]", version(), "IP", _ip, "relay", bool(marcador.url), "BLE",
+      ble[0].nombre if ble[0] else None, "libre", gc.mem_free())
 if _ip:
     cola.append({"text": _ip, "color": [0, 255, 0], "icon": "32930", "_t": time.time()})
 
