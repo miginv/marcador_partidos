@@ -1,10 +1,10 @@
 # Pantalla 16x16: un solo programa con tres modos, sin reinicios entre ellos.
-#   1) posesion  si el emisor de la MONDO esta mandando (UDP 4210 y/o Bluetooth LE, ver
-#                posesion16 y ble16; las lineas repetidas por los dos canales se descartan)
+#   1) posesion  si el emisor de la MONDO esta mandando (UDP 4210, ver posesion16)
+# (en modo pabellon boot.py no carga esto sino pabellon16: solo posesion, por WiFi y Bluetooth)
 #   2) marcador  si hay partido de la lista dentro de su ventana (servidor propio, relay.json)
 #   3) mensajes  el resto del tiempo: reloj + API HTTP tipo Awtrix (puerto 80)
 # API: POST /api/notify | /api/custom (mensaje), GET/POST /api/settings (BRI 0-100,
-# RELAY_CLAVE/RELAY_URL, BLE 1/0 = activar/desactivar el Bluetooth y reiniciar), POST /api/reboot, GET /api/version, POST /api/posesion
+# RELAY_CLAVE/RELAY_URL, PABELLON 1 = modo pabellon y reiniciar), POST /api/reboot, GET /api/version, POST /api/posesion
 # {"cmd": "24"|"14"|"R"|"S"|"OFF"} (pruebas), POST /api/icon?name=<n> (cuerpo = GIF ->
 # /ICONS/<n>.gif, para iconos propios de hasta 16x8).
 import gc
@@ -14,11 +14,19 @@ import socket
 import time
 import machine
 import network
+# al importar, MicroPython compila el .py en RAM y crece quitandole memoria al sistema; con el
+# Bluetooth activo hay que devolversela tras cada modulo (gc.collect) o no quedan sockets
+gc.collect()
 import pantalla16
+gc.collect()
 import sistema16
+gc.collect()
 import mensajes16
+gc.collect()
 import posesion16
+gc.collect()
 import marcador16
+gc.collect()
 
 PUERTO_UDP = 4210
 COLA_MAX = 10
@@ -30,39 +38,17 @@ sta = network.WLAN(network.STA_IF)
 sistema16.leer_ajustes()
 pos = posesion16.Posesion()
 cola = []
-_t = {"rev": 0, "ota": 0}
+_t = {"rev": 0, "ota": 0, "gc": 0}
+GC_MS = 1000                 # MicroPython 1.23 coge memoria del sistema al crecer y solo la
+                             # devuelve al recoger
 
 
 def version():
     return sistema16.version_local()
 
-
-# ---------- lineas de posesion (WiFi y Bluetooth) ----------
-
-_seq = {"n": None, "t": 0}
-SEQ_REINICIO_MS = 3000       # sin nada en 3 s se acepta cualquier numero (emisor reiniciado)
-
-
-def _linea_pos(linea):
-    """"POS ... #n": la misma linea llega por WiFi y por BLE; solo vale la primera."""
-    if " #" in linea:
-        linea, _, n = linea.rpartition(" #")
-        try:
-            n = int(n) & 0xFFFF
-        except ValueError:
-            n = None
-        ahora = time.ticks_ms()
-        if n is not None:
-            u = _seq["n"]
-            if (u is not None and time.ticks_diff(ahora, _seq["t"]) < SEQ_REINICIO_MS
-                    and not 0 < (n - u) & 0xFFFF < 0x8000):
-                return                    # repetida o vieja
-            _seq["n"], _seq["t"] = n, ahora
-    pos.mensaje(linea)
-
-
 # ---------- UDP (Raspberry de la MONDO) ----------
 
+gc.collect()
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp.bind(socket.getaddrinfo("0.0.0.0", PUERTO_UDP)[0][-1])
 udp.setblocking(False)
@@ -85,11 +71,12 @@ def _udp():
                 except OSError:
                     pass
             elif linea:
-                _linea_pos(linea)
+                pos.linea(linea)
 
 
 # ---------- HTTP ----------
 
+gc.collect()
 srv = socket.socket()
 srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 srv.bind(socket.getaddrinfo("0.0.0.0", 80)[0][-1])
@@ -184,15 +171,8 @@ def _atender(cl):
                     marcador.bajar_lista()
                     return _responder(cl, 200, json.dumps({"success": True, "relay": r.get("url", "defecto"),
                                                            "clave": bool(r["clave"])}))
-                if "BLE" in d:        # 1 = reintentar el Bluetooth, 0 = desactivarlo (reinicia)
-                    if d["BLE"]:
-                        try:
-                            os.remove("ble.fallo")
-                        except OSError:
-                            pass
-                    else:
-                        with open("ble.fallo", "w") as f:
-                            f.write("0")
+                if "PABELLON" in d:   # 1 = modo pabellon (posesion por WiFi + Bluetooth); reinicia
+                    sistema16.modo_pabellon(bool(d["PABELLON"]))
                     _responder(cl, 200, '{"success": true, "reinicio": true}')
                     cl.close()
                     time.sleep(1)
@@ -208,9 +188,7 @@ def _atender(cl):
                                             "BRI": int(sistema16.my_shared.BRIGHTNESS * 100)}))
         elif ruta.startswith("/api/version"):
             _responder(cl, 200, json.dumps({"tipo": "16x16", "version": version(), "modo": modo_actual[0],
-                                            "relay": bool(marcador.url), "libre": gc.mem_free(),
-                                            "ble": ble[0].nombre if ble[0] else None,
-                                            "ble_conectado": bool(ble[0] and ble[0].conectados)}))
+                                            "relay": bool(marcador.url), "libre": gc.mem_free()}))
         elif metodo == "POST" and ruta.startswith("/api/posesion"):
             d = json.loads(cuerpo or "{}")
             pos.mensaje("POS " + str(d.get("cmd", "")))
@@ -243,21 +221,16 @@ def _http():
     _atender(cl)
 
 
-ble = [None]
-
-
-def _ble():
-    if ble[0]:
-        for d in ble[0].leer():
-            for linea in d.decode("utf-8", "ignore").split("\n"):
-                linea = linea.strip()
-                if linea:
-                    _linea_pos(linea)
+wdt = None
 
 
 def atender():
+    if wdt:
+        wdt.feed()
+    if time.ticks_diff(time.ticks_ms(), _t["gc"]) >= GC_MS:
+        _t["gc"] = time.ticks_ms()
+        gc.collect()
     _udp()
-    _ble()
     _http()
 
 
@@ -288,24 +261,20 @@ def _aviso_ota(v):
 # ---------- arranque ----------
 
 pantalla16.clear()
-if sta.isconnected():
-    sistema16.sync_hora()
-    try:
-        sistema16.actualizar(_aviso_ota)
-    except Exception as _e:
-        print("[OTA]", _e)
-_t["ota"] = _t["rev"] = time.time()
-try:                         # el Bluetooth lo arranca boot.py (ver ble16)
-    import ble16
-    ble[0] = ble16.activo
+_t["ota"] = _t["rev"] = time.time()      # la hora y la OTA ya las ha hecho boot.py
+gc.collect()
+# vigilante: si algo se cuelga, reinicia (y la OTA del arranque permite corregirlo a distancia)
+WDT_MS = 90000
+try:
+    wdt = machine.WDT(timeout=WDT_MS)
 except Exception as _e:
-    print("[BLE]", _e)
+    wdt = None
+    print("[WDT]", _e)
 marcador = marcador16.Marcador()
 marcador.bajar_lista()
 modo_actual = ["mensajes"]
 _ip = sta.ifconfig()[0] if sta.isconnected() else ""
-print("[16x16]", version(), "IP", _ip, "relay", bool(marcador.url), "BLE",
-      ble[0].nombre if ble[0] else None, "libre", gc.mem_free())
+print("[16x16]", version(), "IP", _ip, "relay", bool(marcador.url), "libre", gc.mem_free())
 if _ip:
     cola.append({"text": _ip, "color": [0, 255, 0], "icon": "32930", "_t": time.time()})
 

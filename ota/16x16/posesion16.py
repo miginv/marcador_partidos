@@ -4,6 +4,8 @@
 #   "POS H <reloj>"          sigue conectada, reloj parado (cada segundo)
 #   "POS 24" / "POS 14"      reseteo de la posesion
 #   "POS OFF"                fin: la pantalla vuelve a su modo normal
+# Cada linea puede llevar al final " #<n>" (numero de secuencia): en modo pabellon llega la
+# misma linea por WiFi y por Bluetooth y solo vale la primera copia (linea()).
 # <reloj> = decimas que quedan en el reloj del partido (-1 si no se sabe). La placa lleva la
 # cuenta atras: corre mientras llegan "R" y se congela con "S" (o si deja de recibir "R").
 # Si el reloj del partido tiene menos tiempo que la posesion, la posesion se apaga (FIBA).
@@ -14,6 +16,7 @@ import fuente16
 COLOR = (255, 0, 0)
 ACTIVO_MS = 5000        # sin nada de la Raspberry en 5 s se sale del modo posesion
 SIN_R_MS = 1500         # en marcha y sin "R" en 1,5 s: se congela (Raspberry caida)
+SEQ_REINICIO_MS = 3000  # sin nada en 3 s se acepta cualquier secuencia (emisor reiniciado)
 
 
 class Posesion:
@@ -25,6 +28,24 @@ class Posesion:
         self.t_r = 0
         self.reloj = -1
         self.pintado = None
+        self.seq = None
+        self.t_seq = 0
+
+    def linea(self, txt):
+        """Linea de WiFi o Bluetooth: descarta las copias repetidas (" #n") y la procesa."""
+        if " #" in txt:
+            txt, _, n = txt.rpartition(" #")
+            try:
+                n = int(n) & 0xFFFF
+            except ValueError:
+                n = None
+            if n is not None:
+                ahora = time.ticks_ms()
+                if (self.seq is not None and time.ticks_diff(ahora, self.t_seq) < SEQ_REINICIO_MS
+                        and not 0 < (n - self.seq) & 0xFFFF < 0x8000):
+                    return True               # repetida o vieja
+                self.seq, self.t_seq = n, ahora
+        return self.mensaje(txt)
 
     def activo(self):
         return self.t_msg is not None and time.ticks_diff(time.ticks_ms(), self.t_msg) < ACTIVO_MS

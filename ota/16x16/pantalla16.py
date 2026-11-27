@@ -50,8 +50,11 @@ class _SpiLeds:
             lut[v * 3] = (bits >> 16) & 0xFF
             lut[v * 3 + 1] = (bits >> 8) & 0xFF
             lut[v * 3 + 2] = bits & 0xFF
-        self.t3 = [bytes(lut[v * 3:v * 3 + 3]) for v in range(256)]
-        self.cero = bytes(40)
+        self.lut = bytes(lut)
+        # trama completa ya reservada (40 ceros + 3 bytes SPI por byte de color + 40 ceros):
+        # write() no crea objetos. Con b"".join MicroPython 1.23 crecia ~65 KB quitandoselos
+        # al sistema y, con el Bluetooth activo, a la WiFi no le quedaba memoria.
+        self.out = bytearray(40 + n * 9 + 40)
         self.spi = machine.SPI(1, baudrate=2400000, polarity=0, phase=0, bits=8,
                                firstbit=machine.SPI.MSB, sck=machine.Pin(sck),
                                mosi=machine.Pin(mosi), miso=None)
@@ -73,8 +76,16 @@ class _SpiLeds:
         # sin viper (no esta en todas las versiones de MicroPython): tabla de 3 bytes por valor.
         # Ceros tambien delante: la linea queda en reposo antes del primer bit (si no, el
         # primer LED puede encenderse solo)
-        t = self.t3
-        self.spi.write(self.cero + b"".join([t[v] for v in self.buf]) + self.cero)
+        out = self.out
+        lut = self.lut
+        j = 40
+        for v in self.buf:
+            e = v * 3
+            out[j] = lut[e]
+            out[j + 1] = lut[e + 1]
+            out[j + 2] = lut[e + 2]
+            j += 3
+        self.spi.write(out)
 
 
 np = None

@@ -65,12 +65,15 @@ FALLO = "ble.fallo"
 
 
 def iniciar(nombre):
-    """Lo primero del arranque (boot.py): MicroPython va quitando memoria al sistema segun crece
-    y, mas tarde, el controlador Bluetooth ya no tiene sitio. Si el controlador no arranca,
-    MicroPython tira la placa entera: la marca ble.fallo se crea antes y se borra si arranca;
-    si sigue al reiniciar, la placa va sin Bluetooth (solo WiFi) hasta que se pida
-    /api/settings {"BLE": 1}."""
+    """boot.py lo llama justo despues de conectar la WiFi: el controlador Bluetooth necesita
+    ~60 KB seguidos de memoria del sistema y, tras la OTA (TLS) y el resto del arranque, ya
+    no los hay (medido: WiFi -> 112 KB libres, + Bluetooth -> 51 KB, y el HTTPS sigue
+    funcionando; al reves solo quedan 45 KB en trozos de 25 KB). Si no arranca, MicroPython tira la placa entera: la marca
+    ble.fallo se crea antes y se borra si arranca; si sigue al reiniciar, la placa va sin
+    Bluetooth (solo WiFi) hasta que se vuelva a pedir el modo pabellon ({"PABELLON": 1})."""
     global activo
+    import gc
+    gc.collect()
     try:
         os.stat(FALLO)
         print("[BLE] desactivado (fallo antes o desactivado a mano)")

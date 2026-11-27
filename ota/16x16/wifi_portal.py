@@ -11,7 +11,8 @@ import machine
 
 AP_SSID = "scoreboard"
 AP_IP = "192.168.4.1"
-INTENTO_SEG = 10            # por red guardada
+INTENTO_SEG = 15            # por red guardada (tras un reinicio el router a veces tarda)
+VUELTAS = 3                 # vueltas a las redes guardadas antes de abrir el portal
 PORTAL_MAX_SEG = 10 * 60    # sin nadie usando el portal: reinicia y vuelve a probar
 CONFIG_FILE = "config.json"
 
@@ -71,10 +72,12 @@ def asegurar(hostname=None, disp_mod=None):
     disp = None
     if disp_mod:
         disp = __import__(disp_mod)
-    if conectar(hostname, disp):
-        if disp:
-            disp.clear()
-        return True
+    for vuelta in range(VUELTAS):
+        if conectar(hostname, disp):
+            if disp:
+                disp.clear()
+            return True
+        print("[WIFI] vuelta", vuelta + 1, "sin conexion")
     if disp is None:
         disp = __import__("marcador_disp")
     portal(disp)

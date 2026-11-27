@@ -1,19 +1,21 @@
 {
-  "version": "1.0.8",
+  "version": "1.1.1",
   "files": [
     "boot.py",
-    "main16.py",
-    "pantalla16.py",
-    "fuente16.py",
-    "awtrix_font.py",
-    "gif16.py",
-    "sistema16.py",
-    "mensajes16.py",
-    "posesion16.py",
-    "ble16.py",
-    "marcador16.py",
-    "fbm_http.py",
-    "font_narrow.py",
-    "wifi_portal.py"
+    "main16.mpy",
+    "pantalla16.mpy",
+    "fuente16.mpy",
+    "awtrix_font.mpy",
+    "gif16.mpy",
+    "sistema16.mpy",
+    "reloj16.mpy",
+    "mensajes16.mpy",
+    "posesion16.mpy",
+    "ble16.mpy",
+    "pabellon16.mpy",
+    "marcador16.mpy",
+    "fbm_http.mpy",
+    "font_narrow.mpy",
+    "wifi_portal.mpy"
   ]
 }

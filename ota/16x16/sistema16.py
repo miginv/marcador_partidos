@@ -128,6 +128,33 @@ def _bajar(url, destino):
     return n
 
 
+PABELLON = "pabellon.on"
+
+
+def es_pabellon():
+    """Modo pabellon: solo reloj de posesion, por WiFi y Bluetooth (pabellon16)."""
+    try:
+        os.stat(PABELLON)
+        return True
+    except OSError:
+        return False
+
+
+def modo_pabellon(si):
+    if si:
+        with open(PABELLON, "w") as f:
+            f.write("1")
+        try:
+            os.remove("ble.fallo")          # al pedirlo a mano, se vuelve a intentar el Bluetooth
+        except OSError:
+            pass
+    else:
+        try:
+            os.remove(PABELLON)
+        except OSError:
+            pass
+
+
 def actualizar(aviso=None):
     """Si hay version nueva en GitHub la instala (todo o nada) y reinicia."""
     try:
@@ -162,6 +189,11 @@ def actualizar(aviso=None):
         except OSError:
             pass
         os.rename(fn + ".new", fn)
+        if fn.endswith(".mpy"):          # un .py con el mismo nombre se cargaria antes
+            try:
+                os.remove(fn[:-4] + ".py")
+            except OSError:
+                pass
     with open(OTA_VERSION_FILE, "w") as f:
         f.write(nueva)
     print("[OTA] instalada", nueva, "-> reinicio")
