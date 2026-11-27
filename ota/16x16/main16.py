@@ -282,11 +282,27 @@ if sta.isconnected():
     except Exception as _e:
         print("[OTA]", _e)
 _t["ota"] = _t["rev"] = time.time()
-try:                         # despues de la OTA: si el Bluetooth fallara, se puede corregir
-    import ble16
-    ble[0] = ble16.Ble("pos16-" + "".join("%02x" % b for b in sta.config("mac")[-2:]))
-except Exception as _e:
-    print("[BLE] no disponible:", _e)
+# Bluetooth despues de la OTA (si fallara, se puede corregir). Si el controlador no arranca,
+# MicroPython tira la placa entera: la marca ble.fallo se crea antes y se borra si arranca;
+# si sigue ahi al reiniciar, la placa funciona sin Bluetooth (solo WiFi) hasta que se borre.
+def _iniciar_ble():
+    try:
+        os.stat("ble.fallo")
+        print("[BLE] desactivado: fallo en un arranque anterior (borrar ble.fallo para reintentar)")
+        return
+    except OSError:
+        pass
+    with open("ble.fallo", "w") as f:
+        f.write("1")
+    try:
+        import ble16
+        ble[0] = ble16.Ble("pos16-" + "".join("%02x" % b for b in sta.config("mac")[-2:]))
+        os.remove("ble.fallo")
+    except Exception as e:
+        print("[BLE] no disponible:", e)
+
+
+_iniciar_ble()
 gc.collect()
 marcador = marcador16.Marcador()
 marcador.bajar_lista()

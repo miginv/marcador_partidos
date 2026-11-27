@@ -106,6 +106,28 @@ def _get(url):
         r.close()
 
 
+def _bajar(url, destino):
+    """Descarga a fichero por trozos de 1 KB (un .py grande no cabe entero en la RAM)."""
+    import requests
+    gc.collect()
+    r = requests.get(url, headers={"Cache-Control": "no-cache"}, stream=True)
+    n = 0
+    try:
+        if r.status_code != 200:
+            raise OSError("HTTP %d" % r.status_code)
+        buf = bytearray(1024)
+        with open(destino, "wb") as f:
+            while True:
+                k = r.raw.readinto(buf)
+                if not k:
+                    break
+                f.write(buf[:k] if k < 1024 else buf)
+                n += k
+    finally:
+        r.close()
+    return n
+
+
 def actualizar(aviso=None):
     """Si hay version nueva en GitHub la instala (todo o nada) y reinicia."""
     try:
@@ -124,12 +146,8 @@ def actualizar(aviso=None):
         aviso(nueva)
     for fn in ficheros:
         try:
-            datos = _get(OTA_BASE + fn)
-            if not datos:
+            if not _bajar(OTA_BASE + fn, fn + ".new"):
                 raise OSError("vacio")
-            with open(fn + ".new", "wb") as f:
-                f.write(datos)
-            del datos
         except Exception as e:
             print("[OTA] fallo", fn, e, "-> no se instala nada")
             for g in ficheros:
