@@ -121,6 +121,66 @@
    "notif": "390568",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1795944600,
+   "fecha": "29/11/2026",
+   "hora": "10:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "CLAUDINA THEVENET JESUS MARIA",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "398698",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795951800,
+   "fecha": "29/11/2026",
+   "hora": "12:30",
+   "local": "COSLADA C.B. PLS SERRACINES",
+   "visit": "TORREJON DE LA CALZADA EMB",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Masc BRONCE",
+   "notif": "399076",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795966200,
+   "fecha": "29/11/2026",
+   "hora": "16:30",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "SAN AGUSTIN MADRID \"B\"",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "2ª Div Aut Fem ORO",
+   "notif": "389758",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795972500,
+   "fecha": "29/11/2026",
+   "hora": "18:15",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "EL VALLE C.D.",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Liga Ginos Masculina PLATA",
+   "notif": "382246",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1795978800,
+   "fecha": "29/11/2026",
+   "hora": "20:00",
+   "local": "COSLADA C.B. SERRACINES",
+   "visit": "C.B. COSLADA",
+   "campo": "C.E.I.P. SERRACINES, PABELLON",
+   "categoria": "Sub 22 Masc. PLATA",
+   "notif": "391015",
+   "buscar": "serracines",
+   "skip": 100
   }
  ]
 }
