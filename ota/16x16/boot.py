@@ -5,6 +5,11 @@ import ubinascii
 import wifi_portal
 
 _mac = ubinascii.hexlify(network.WLAN(network.STA_IF).config("mac")).decode()
+try:                     # Bluetooth lo primero, antes de que la memoria se reparta (ver ble16)
+    import ble16
+    ble16.iniciar("pos16-" + _mac[-4:])
+except Exception as _e:
+    print("[BLE]", _e)
 wifi_portal.asegurar("marcador-" + _mac[-4:], "pantalla16")
 del _mac
 import main16            # no vuelve

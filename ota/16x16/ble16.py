@@ -3,6 +3,7 @@
 # emisor (Mac o Raspberry) escribe en la caracteristica RX las mismas lineas que manda por
 # UDP ("POS R 1234 #57"). main16 las procesa igual que las del WiFi y descarta las repetidas
 # por el numero de secuencia (#n), asi da igual cual de los dos canales llegue antes.
+import os
 import bluetooth
 
 SERVICIO = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
@@ -57,3 +58,32 @@ class Ble:
             return ()
         l, self.lineas = self.lineas, []
         return l
+
+
+activo = None
+FALLO = "ble.fallo"
+
+
+def iniciar(nombre):
+    """Lo primero del arranque (boot.py): MicroPython va quitando memoria al sistema segun crece
+    y, mas tarde, el controlador Bluetooth ya no tiene sitio. Si el controlador no arranca,
+    MicroPython tira la placa entera: la marca ble.fallo se crea antes y se borra si arranca;
+    si sigue al reiniciar, la placa va sin Bluetooth (solo WiFi) hasta que se pida
+    /api/settings {"BLE": 1}."""
+    global activo
+    try:
+        os.stat(FALLO)
+        print("[BLE] desactivado (fallo antes o desactivado a mano)")
+        return None
+    except OSError:
+        pass
+    with open(FALLO, "w") as f:
+        f.write("1")
+    try:
+        activo = Ble(nombre)
+        print("[BLE] anunciando", nombre)
+    except Exception as e:
+        print("[BLE] no disponible:", e)
+        return None
+    os.remove(FALLO)
+    return activo

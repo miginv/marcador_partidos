@@ -4,7 +4,7 @@
 #   2) marcador  si hay partido de la lista dentro de su ventana (servidor propio, relay.json)
 #   3) mensajes  el resto del tiempo: reloj + API HTTP tipo Awtrix (puerto 80)
 # API: POST /api/notify | /api/custom (mensaje), GET/POST /api/settings (BRI 0-100,
-# RELAY_CLAVE/RELAY_URL), POST /api/reboot, GET /api/version, POST /api/posesion
+# RELAY_CLAVE/RELAY_URL, BLE 1/0 = activar/desactivar el Bluetooth y reiniciar), POST /api/reboot, GET /api/version, POST /api/posesion
 # {"cmd": "24"|"14"|"R"|"S"|"OFF"} (pruebas), POST /api/icon?name=<n> (cuerpo = GIF ->
 # /ICONS/<n>.gif, para iconos propios de hasta 16x8).
 import gc
@@ -184,6 +184,19 @@ def _atender(cl):
                     marcador.bajar_lista()
                     return _responder(cl, 200, json.dumps({"success": True, "relay": r.get("url", "defecto"),
                                                            "clave": bool(r["clave"])}))
+                if "BLE" in d:        # 1 = reintentar el Bluetooth, 0 = desactivarlo (reinicia)
+                    if d["BLE"]:
+                        try:
+                            os.remove("ble.fallo")
+                        except OSError:
+                            pass
+                    else:
+                        with open("ble.fallo", "w") as f:
+                            f.write("0")
+                    _responder(cl, 200, '{"success": true, "reinicio": true}')
+                    cl.close()
+                    time.sleep(1)
+                    machine.reset()
                 if "BRI" in d:
                     b = max(1, min(100, int(float(d["BRI"])))) / 100.0
                     sistema16.my_shared.BRIGHTNESS = b
@@ -282,28 +295,11 @@ if sta.isconnected():
     except Exception as _e:
         print("[OTA]", _e)
 _t["ota"] = _t["rev"] = time.time()
-# Bluetooth despues de la OTA (si fallara, se puede corregir). Si el controlador no arranca,
-# MicroPython tira la placa entera: la marca ble.fallo se crea antes y se borra si arranca;
-# si sigue ahi al reiniciar, la placa funciona sin Bluetooth (solo WiFi) hasta que se borre.
-def _iniciar_ble():
-    try:
-        os.stat("ble.fallo")
-        print("[BLE] desactivado: fallo en un arranque anterior (borrar ble.fallo para reintentar)")
-        return
-    except OSError:
-        pass
-    with open("ble.fallo", "w") as f:
-        f.write("1")
-    try:
-        import ble16
-        ble[0] = ble16.Ble("pos16-" + "".join("%02x" % b for b in sta.config("mac")[-2:]))
-        os.remove("ble.fallo")
-    except Exception as e:
-        print("[BLE] no disponible:", e)
-
-
-_iniciar_ble()
-gc.collect()
+try:                         # el Bluetooth lo arranca boot.py (ver ble16)
+    import ble16
+    ble[0] = ble16.activo
+except Exception as _e:
+    print("[BLE]", _e)
 marcador = marcador16.Marcador()
 marcador.bajar_lista()
 modo_actual = ["mensajes"]
