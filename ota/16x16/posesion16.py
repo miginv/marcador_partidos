@@ -28,6 +28,7 @@ def _leer_vista():
         return 1
 ACTIVO_MS = 5000        # sin nada de la Raspberry en 5 s se sale del modo posesion
 SIN_R_MS = 1500         # en marcha y sin "R" en 1,5 s: se congela (Raspberry caida)
+RELOJ_INICIAL = 7200    # reloj del partido hasta que llegue el de verdad: 12:00 (en decimas)
 SEQ_REINICIO_MS = 3000  # sin nada en 3 s se acepta cualquier secuencia (emisor reiniciado)
 
 
@@ -38,7 +39,7 @@ class Posesion:
         self.t_ref = 0
         self.t_msg = None
         self.t_r = 0
-        self.reloj = -1
+        self.reloj = RELOJ_INICIAL
         self.pintado = None
         self.seq = None
         self.t_seq = 0

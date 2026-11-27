@@ -85,7 +85,7 @@ def version():
 def _estado():
     import esp32
     return {"tipo": "16x16", "version": version(), "modo": "pabellon-" + modo[0],
-            "ip": _t["ip"], "vista": pos.vista, "ble": ble.nombre if ble else None,
+            "ip": _t["ip"], "vista": pos.vista, "reloj": pos.reloj, "posesion": pos.texto(), "ble": ble.nombre if ble else None,
             "ble_conectado": bool(ble and ble.conectados), "libre": gc.mem_free(),
             "heap": gc.mem_free() + gc.mem_alloc(),
             "sistema": sum(h[1] for h in esp32.idf_heap_info(esp32.HEAP_DATA))}
