@@ -121,6 +121,18 @@
    "notif": "391015",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1796067014,
+   "fecha": "30/11/2026",
+   "hora": "20:30",
+   "local": "NUEVAS GLORIAS",
+   "visit": "SERRACINES FEMENINO",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409853",
+   "buscar": "serracines",
+   "skip": 100
   }
  ]
 }
