@@ -10,6 +10,13 @@ import my_display
 import my_shared
 import orientacion
 orientacion.aplicar(my_display.LED_MAP_4 if my_shared.MATRIX_TILES == 4 else my_display.LED_MAP_17)   # mapa de la Awtrix girado si la pantalla va girada
+# La Awtrix pinta por neopixel (RMT) y, con la WiFi, a veces la trama se corta y salen colores
+# corruptos o parpadeos. Se cambia por el envio SPI+DMA del marcador, como en la 24x8.
+try:
+    import marcador_disp
+    my_display.np = marcador_disp.np
+except Exception as _e:
+    print("[DISPLAY] mensajes sin SPI:", _e)
 import my_network
 import my_server
 import json
