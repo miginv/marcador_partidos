@@ -73,8 +73,24 @@ def partido_cercano():
     return None
 
 
+RELAY_DEFECTO = "http://34.30.243.27"
+
+
+def relay():
+    """(url, clave) del servidor propio si la placa tiene clave en relay.json, si no None."""
+    try:
+        with open("relay.json") as f:
+            d = json.load(f)
+        if d.get("clave"):
+            return d.get("url") or RELAY_DEFECTO, d["clave"]
+    except Exception:
+        pass
+    return None
+
+
 def descargar():
-    """Baja la lista de GitHub a partidos.json. True si ha ido bien."""
+    """Baja la lista a partidos.json: del servidor propio si hay clave (la misma que usa el
+    marcador, que puede ir filtrada por equipo), si no de GitHub. True si ha ido bien."""
     import gc
     url = PARTIDOS_URL
     try:
@@ -82,6 +98,9 @@ def descargar():
             url = json.load(f).get("partidos_url", PARTIDOS_URL)
     except Exception:
         pass
+    r = relay()
+    if r:
+        url = r[0] + "/partidos.json?k=" + r[1]
     gc.collect()
     try:
         import requests
