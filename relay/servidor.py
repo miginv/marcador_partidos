@@ -9,6 +9,13 @@ Leer exige la clave de la pantalla (?k= o cabecera X-Key) si claves.json existe:
 "equipos" es opcional: la pantalla con esa clave solo recibe en /partidos.json los partidos en
 los que juega alguno de esos equipos (local o visitante, sin distinguir mayusculas). Asi una
 pantalla regalada a un equipo sigue solo sus partidos.
+"secretos" (opcional): {"<clave>": "<64 hex>"}, secreto de cada placa para cifrarle las WiFis.
+  GET /ajustes.json?k=<clave> -> ajustes de esa pantalla, de ajustes.json (tampoco va al repo):
+  {"todas": {"brillo": 40, "wifis": [{"ssid": "...", "password": "..."}]},
+   "<nombre de la pantalla>": {"brillo_marcador": 60, "wifis": [...], "equipos": [...]}}
+  Lo de la pantalla manda sobre "todas"; las WiFis se suman. Las WiFis solo salen cifradas
+  (AES-256-CBC + firma, ver ota/32x8/ajustes_remotos.py) y solo si la clave tiene secreto.
+  "equipos" en ajustes.json tambien filtra /partidos.json, como en claves.json.
 Sin clave valida responde 404 (como si no hubiera nada). Se relee al cambiar el fichero.
 Maximo LIMITE_MIN lecturas por minuto y por IP (429 si se pasa).
 token.txt y claves.json nunca van al repo.
@@ -30,7 +37,10 @@ DATOS = {}            # ruta -> bytes (en memoria; tambien a disco para sobreviv
 GUARDA = os.path.join(DIR, "datos")
 _lock = threading.Lock()
 CLAVES_FICH = os.path.join(DIR, "claves.json")
-_claves = {"mtime": None, "obligatoria": False, "claves": {}, "equipos": {}}
+_claves = {"mtime": None, "obligatoria": False, "claves": {}, "equipos": {}, "secretos": {}}
+AJUSTES_FICH = os.path.join(DIR, "ajustes.json")
+_ajustes = {"mtime": None, "d": {}}
+CAMPOS = ("brillo", "brillo_marcador", "wifis", "equipos")
 LIMITE_MIN = 120
 _uso = {}             # ip -> [minuto, peticiones]
 
@@ -40,7 +50,7 @@ def claves():
     try:
         mt = os.path.getmtime(CLAVES_FICH)
     except OSError:
-        _claves.update(mtime=None, obligatoria=False, claves={}, equipos={})
+        _claves.update(mtime=None, obligatoria=False, claves={}, equipos={}, secretos={})
         return _claves
     if mt != _claves["mtime"]:
         try:
@@ -48,10 +58,68 @@ def claves():
             _claves.update(mtime=mt, obligatoria=bool(d.get("obligatoria", True)),
                            claves=dict(d.get("claves", {})),
                            equipos={k: [e.upper() for e in ([v] if isinstance(v, str) else v)]
-                                    for k, v in d.get("equipos", {}).items()})
+                                    for k, v in d.get("equipos", {}).items()},
+                           secretos=dict(d.get("secretos", {})))
         except Exception as e:
             sys.stderr.write("claves.json no valido: %s\n" % e)
     return _claves
+
+
+def ajustes_de(k):
+    """Ajustes en claro de la pantalla con la clave k ("todas" + los suyos)."""
+    try:
+        mt = os.path.getmtime(AJUSTES_FICH)
+        if mt != _ajustes["mtime"]:
+            _ajustes.update(mtime=mt, d=json.load(open(AJUSTES_FICH)))
+    except OSError:
+        _ajustes.update(mtime=None, d={})
+    except Exception as e:
+        sys.stderr.write("ajustes.json no valido: %s\n" % e)
+    a = _ajustes["d"]
+    nombre = claves()["claves"].get(k)
+    r = {}
+    for parte in (a.get("todas", {}), a.get(nombre, {}) if nombre else {}):
+        for c, v in parte.items():
+            if c not in CAMPOS:
+                continue
+            r[c] = r.get(c, []) + list(v) if c == "wifis" else v
+    return r
+
+
+def equipos_de(k):
+    e = ajustes_de(k).get("equipos") or claves()["equipos"].get(k)
+    if isinstance(e, str):
+        e = [e]
+    return [x.upper() for x in e] if e else None
+
+
+def cifrar(datos, secreto):
+    """Lo que descifra ajustes_remotos._descifrar en la placa."""
+    import base64
+    import hashlib
+    from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+    clave = bytes.fromhex(secreto)
+    iv = os.urandom(16)
+    n = 16 - len(datos) % 16
+    e = Cipher(algorithms.AES(clave), modes.CBC(iv)).encryptor()
+    ct = e.update(datos + bytes([n]) * n) + e.finalize()
+    kmac = hashlib.sha256(clave + b"mac").digest()
+    tag = hashlib.sha256(kmac + hashlib.sha256(kmac + iv + ct).digest()).digest()[:16]
+    return base64.b64encode(iv + ct + tag).decode()
+
+
+def respuesta_ajustes(k):
+    import hashlib
+    a = ajustes_de(k)
+    a.pop("equipos", None)                 # eso lo aplica el servidor, no la placa
+    secreto = claves()["secretos"].get(k)
+    if not secreto:
+        a.pop("wifis", None)               # nunca en claro
+    v = hashlib.sha256(json.dumps(a, sort_keys=True).encode()).hexdigest()[:12]
+    if a.get("wifis"):
+        a["wifis"] = cifrar(json.dumps(a["wifis"]).encode(), secreto)
+    a["v"] = v
+    return json.dumps(a).encode()
 
 
 def filtrar(d, equipos):
@@ -111,12 +179,20 @@ class H(BaseHTTPRequestHandler):
         k = (parse_qs(partes.query).get("k") or [self.headers.get("X-Key") or ""])[0]
         if c["obligatoria"] and k not in c["claves"]:
             return self._resp(404, b'{"error":"no"}')
+        if ruta == "/ajustes.json":
+            try:
+                return self._resp(200, respuesta_ajustes(k))
+            except Exception as e:
+                sys.stderr.write("ajustes: %s\n" % e)
+                return self._resp(500, b'{"error":"ajustes"}')
         with _lock:
             d = DATOS.get(ruta)
         if d is None:
             return self._resp(404, b'{"error":"no"}')
-        if ruta == "/partidos.json" and k in c["equipos"]:
-            d = filtrar(d, c["equipos"][k])
+        if ruta == "/partidos.json":
+            e = equipos_de(k)
+            if e:
+                d = filtrar(d, e)
         self._resp(200, d)
 
     do_HEAD = do_GET

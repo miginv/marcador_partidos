@@ -5,6 +5,12 @@ import json
 
 import my_display
 import my_shared
+try:                                   # brillo que mande el servidor (ajustes_remotos)
+    import ajustes_remotos
+    my_shared.BRIGHTNESS = ajustes_remotos.brillo(True) or my_shared.BRIGHTNESS
+    del ajustes_remotos
+except Exception:
+    pass
 import font_narrow as _f8
 # datos del partido: del servidor propio del marcador (Google Cloud, http, un solo cliente de
 # la FBM para todas las pantallas) si la placa tiene su clave en relay.json:

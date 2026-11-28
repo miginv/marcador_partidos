@@ -19,11 +19,19 @@ sta = network.WLAN(network.STA_IF)
 
 
 def _creds():
+    """Redes de config.json y, detras, las que manda el servidor (ajustes_remotos.json)."""
     try:
         with open(CONFIG_FILE) as f:
-            return json.load(f).get("wifi_credentials", [])
+            c = json.load(f).get("wifi_credentials", [])
     except Exception:
-        return []
+        c = []
+    try:
+        with open("ajustes_remotos.json") as f:
+            ya = [x.get("ssid") for x in c]
+            c += [w for w in json.load(f).get("wifis", []) if w.get("ssid") not in ya]
+    except Exception:
+        pass
+    return c
 
 
 def conectar(hostname=None, disp=None):

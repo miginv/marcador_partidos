@@ -10,6 +10,12 @@ import my_shared
 # brillo del marcador: 0.333 (igual que el 24x8, se dibuja al 50 %) o el de la placa
 # (MARCADOR_BRIGHTNESS en su my_shared.py, p. ej. pantallas largas con poca fuerza)
 my_shared.BRIGHTNESS = getattr(my_shared, "MARCADOR_BRIGHTNESS", 0.333)
+try:                                   # o el que mande el servidor (ajustes_remotos)
+    import ajustes_remotos
+    my_shared.BRIGHTNESS = ajustes_remotos.brillo(True) or my_shared.BRIGHTNESS
+    del ajustes_remotos
+except Exception:
+    pass
 my_shared.DEBUG = False
 import marcador_disp as my_display
 import font_narrow as _f8

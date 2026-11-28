@@ -1,5 +1,5 @@
 {
- "version": "1.0.8",
+ "version": "1.0.9",
  "files": [
   "boot.py",
   "marcador24.py",
@@ -10,6 +10,7 @@
   "awtrix24.py",
   "mensajes_fbm.py",
   "wifi_portal.py",
-  "fbm_http.py"
+  "fbm_http.py",
+  "ajustes_remotos.py"
  ]
 }

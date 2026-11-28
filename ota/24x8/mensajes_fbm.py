@@ -13,6 +13,7 @@ import modo_fbm
 import my_display
 import awtrix24
 import my_shared
+import ajustes_remotos
 
 COLA_MAX = 10
 REVISAR_SEG = 60
@@ -126,15 +127,25 @@ def _atender(cl):
             _responder(cl, 200, json.dumps({"BRI": int(my_shared.BRIGHTNESS * 100)}))
         elif linea.startswith("POST /api/settings"):
             d = json.loads(cuerpo)
-            if "RELAY_CLAVE" in d:
-                # clave del servidor del marcador -> relay.json (clave "" = FBM directa)
-                r = {"clave": str(d["RELAY_CLAVE"])}
+            if "RELAY_CLAVE" in d or "RELAY_SECRETO" in d:
+                # clave del servidor del marcador y secreto de las WiFis -> relay.json
+                # (clave "" = FBM directa); se conserva lo que no venga
+                try:
+                    with open("relay.json") as f:
+                        r = json.load(f)
+                except Exception:
+                    r = {}
+                if "RELAY_CLAVE" in d:
+                    r["clave"] = str(d["RELAY_CLAVE"])
                 if d.get("RELAY_URL"):
                     r["url"] = str(d["RELAY_URL"])
+                if "RELAY_SECRETO" in d:
+                    r["secreto"] = str(d["RELAY_SECRETO"])
                 with open("relay.json", "w") as f:
                     json.dump(r, f)
                 _responder(cl, 200, json.dumps({"success": True, "relay": r.get("url", "defecto"),
-                                                "clave": bool(r["clave"])}))
+                                                "clave": bool(r.get("clave")),
+                                                "secreto": bool(r.get("secreto"))}))
                 return
             if "BRI" in d:
                 my_shared.BRIGHTNESS = max(0, min(100, int(float(d["BRI"])))) / 100.0
@@ -173,6 +184,12 @@ def _marcador_msg(d):
 
 # ---------- partidos ----------
 
+def _brillo():
+    b = ajustes_remotos.brillo()
+    if b:
+        my_shared.BRIGHTNESS = b
+
+
 def _revisar():
     ahora = time.time()
     if not _hora_ok and _sta.isconnected():
@@ -187,6 +204,8 @@ def _revisar():
         _t["desc"] = ahora
         if modo_fbm.descargar():
             _t["ok"] = ahora
+        if ajustes_remotos.bajar():
+            _brillo()
     p = modo_fbm.partido_cercano()
     if p:
         print("[MODO] partido cerca:", p.get("hora"), p.get("local"), "vs", p.get("visit"))
@@ -209,6 +228,8 @@ except Exception as _e:
     print("[OTA] error:", _e)
 if modo_fbm.descargar():
     print("[MODO] lista descargada")
+ajustes_remotos.bajar()
+_brillo()
 if _sta.isconnected():
     for _ic in ICONOS_AUTO_POWER:
         try:

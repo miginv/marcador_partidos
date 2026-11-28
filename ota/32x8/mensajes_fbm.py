@@ -23,8 +23,24 @@ import json
 
 # Clave del servidor del marcador por la API de siempre: POST /api/settings
 #   {"RELAY_CLAVE": "<clave>", "RELAY_URL": "http://host"}  (url opcional; clave "" = FBM directa)
+#   {"RELAY_SECRETO": "<64 hex>"}  secreto para descifrar las WiFis de ajustes_remotos
 # se guarda en relay.json, que es lo que lee marcador_fbm. El resto de ajustes, como siempre.
+import ajustes_remotos
 _settings_orig = my_server.handle_settings_request
+
+
+def _relay_json():
+    try:
+        with open("relay.json") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _brillo():
+    b = ajustes_remotos.brillo()
+    if b:
+        my_shared.BRIGHTNESS = b
 
 
 def _settings(cl, body):
@@ -32,14 +48,19 @@ def _settings(cl, body):
         p = json.loads(body)
     except Exception:
         p = None
-    if isinstance(p, dict) and "RELAY_CLAVE" in p:
-        d = {"clave": str(p["RELAY_CLAVE"])}
+    if isinstance(p, dict) and ("RELAY_CLAVE" in p or "RELAY_SECRETO" in p):
+        d = _relay_json()                  # se conserva lo que no venga (clave, url, secreto)
+        if "RELAY_CLAVE" in p:
+            d["clave"] = str(p["RELAY_CLAVE"])
         if p.get("RELAY_URL"):
             d["url"] = str(p["RELAY_URL"])
+        if "RELAY_SECRETO" in p:
+            d["secreto"] = str(p["RELAY_SECRETO"])
         with open("relay.json", "w") as f:
             json.dump(d, f)
         my_server.send_json_response(cl, 200, json.dumps(
-            {"success": True, "relay": d.get("url", "defecto"), "clave": bool(d["clave"])}))
+            {"success": True, "relay": d.get("url", "defecto"), "clave": bool(d.get("clave")),
+             "secreto": bool(d.get("secreto"))}))
         print("[RELAY] clave guardada en relay.json")
         return True
     return _settings_orig(cl, body)
@@ -61,6 +82,8 @@ def _revisar():
         _t["desc"] = ahora
         if modo_fbm.descargar():
             _t["ok"] = ahora
+        if ajustes_remotos.bajar():
+            _brillo()
     p = modo_fbm.partido_cercano()
     if p:
         print("[MODO] partido cerca:", p.get("hora"), p.get("local"), "vs", p.get("visit"))
@@ -93,6 +116,8 @@ except Exception as _e:
     print("[OTA] error:", _e)
 if modo_fbm.descargar():
     print("[MODO] lista descargada")
+ajustes_remotos.bajar()
+_brillo()
 _t["ota"] = _t["ok"] = _t["desc"] = time.time()   # tras el NTP: el reloj ha saltado
 my_display.process_awtrix({
     "text": "{} {} {}".format(my_network.get_ssid(), my_network.get_ip(), my_network.get_hostname()),
