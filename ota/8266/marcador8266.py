@@ -259,8 +259,9 @@ def nuestro(n):
 # ---------- pantallas ----------
 def pinta_reloj(cuarto, r, puntos):
     borrar()
-    texto(cuarto[-2:] if cuarto else "", 0, ROJO)
-    x = 11
+    # el cuarto solo con el numero (Q4 -> 4; prorroga OT1), como las demas pantallas
+    centrado((cuarto or "").lstrip("Q"), ROJO, 0, 14)
+    x = 15
     x = texto("%02d" % (r // 60), x, VERDE)
     if puntos:
         texto(":", x, VERDE)
