@@ -1,7 +1,8 @@
 # Marcador ligero para ESP8266: el Awtrix marcador estandar (ESP32) no cabe en sus ~36 KB.
-# Solo hace de marcador: lee la lista y el partido del servidor propio (relay, http sin TLS,
+# Hace de marcador: lee la lista y el partido del servidor propio (relay, http sin TLS,
 # con su clave) y pinta en la matriz 32x8 el reloj (cuarto + mm:ss) y el marcador. Sin
-# mensajes, sin OTA y sin web: para cambiar algo, por USB (config.json).
+# OTA ni web: para cambiar algo, por USB (config.json). Recibe los mensajes de la domotica
+# como una Awtrix: POST /api/notify {"text", "color", "repeat"} (sin iconos, en mayusculas).
 # config.json: {"wifi": [{"ssid","password"}...], "relay": "http://host", "clave": "...",
 #   "brillo": 0.1, "pin": 4, "ancho": 32, "mapa": "8x8", "girada": false}
 #   mapa "8x8" (por defecto): modulos 8x8 encadenados de izquierda a derecha, cada uno con
@@ -31,6 +32,7 @@ DERECHA = CFG.get("derecha", True)
 GIRADA = CFG.get("girada", False)
 RELAY = CFG.get("relay", "http://34.30.243.27").split("://", 1)[-1].rstrip("/")
 CLAVE = CFG.get("clave", "")
+VERSION = "1.1"
 EPOCH = 946684800 if time.gmtime(0)[0] == 2000 else 0    # el ESP8266 cuenta desde 2000
 
 AZUL, ROJO, VERDE, BLANCO, NARANJA = (0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 255, 255), (255, 100, 0)
@@ -67,31 +69,47 @@ GRANDE = (b"\xf8\xf8\xd8\xd8\xd8\xd8\xf8\xf8", b"\x18\x18\x18\x18\x18\x18\x18\x1
           b"\xd8\xd8\xd8\xf8\xf8\x18\x18\x18", b"\xf8\xf8\xc0\xf8\xf8\x18\xf8\xf8",
           b"\xf8\xf8\xc0\xf8\xf8\xd8\xf8\xf8", b"\xf8\xf8\x18\x18\x18\x18\x18\x18",
           b"\xf8\xf8\xd8\xf8\xf8\xd8\xf8\xf8", b"\xf8\xf8\xd8\xf8\xf8\x18\xf8\xf8")
-# letras y digitos 3x5 (5 filas de 3 bits)
+# letras y digitos 3x5 (5 filas de 3 bits; los de 1 columna usan el bit del medio)
 PEQ = {"0": (7, 5, 5, 5, 7), "1": (2, 6, 2, 2, 7), "2": (7, 1, 7, 4, 7), "3": (7, 1, 3, 1, 7),
        "4": (5, 5, 7, 1, 1), "5": (7, 4, 7, 1, 7), "6": (7, 4, 7, 5, 7), "7": (7, 1, 1, 2, 2),
-       "8": (7, 5, 7, 5, 7), "9": (7, 5, 7, 1, 7), ":": (0, 2, 0, 2, 0), "-": (0, 0, 7, 0, 0),
-       "Q": (7, 5, 5, 7, 1), "O": (7, 5, 5, 5, 7), "T": (7, 2, 2, 2, 2), "F": (7, 4, 6, 4, 4),
-       "I": (7, 2, 2, 2, 7), "N": (5, 7, 7, 5, 5), "W": (5, 5, 7, 7, 5), "E": (7, 4, 6, 4, 7),
-       "R": (6, 5, 6, 5, 5), "S": (7, 4, 7, 1, 7), "G": (7, 4, 5, 5, 7), "A": (7, 5, 7, 5, 5),
-       "L": (4, 4, 4, 4, 7), "C": (7, 4, 4, 4, 7), "V": (5, 5, 5, 5, 2), "P": (7, 5, 7, 4, 4),
-       " ": (0, 0, 0, 0, 0)}
+       "8": (7, 5, 7, 5, 7), "9": (7, 5, 7, 1, 7),
+       "A": (7, 5, 7, 5, 5), "B": (6, 5, 6, 5, 6), "C": (7, 4, 4, 4, 7), "D": (6, 5, 5, 5, 6),
+       "E": (7, 4, 6, 4, 7), "F": (7, 4, 6, 4, 4), "G": (7, 4, 5, 5, 7), "H": (5, 5, 7, 5, 5),
+       "I": (7, 2, 2, 2, 7), "J": (1, 1, 1, 5, 7), "K": (5, 5, 6, 5, 5), "L": (4, 4, 4, 4, 7),
+       "M": (5, 7, 7, 5, 5), "N": (6, 5, 5, 5, 5), "O": (2, 5, 5, 5, 2), "P": (7, 5, 7, 4, 4),
+       "Q": (2, 5, 5, 6, 3), "R": (6, 5, 6, 5, 5), "S": (3, 4, 2, 1, 6), "T": (7, 2, 2, 2, 2),
+       "U": (5, 5, 5, 5, 7), "V": (5, 5, 5, 5, 2), "W": (5, 5, 7, 7, 5), "X": (5, 5, 2, 5, 5),
+       "Y": (5, 5, 2, 2, 2), "Z": (7, 1, 2, 4, 7),
+       ":": (0, 2, 0, 2, 0), ".": (0, 0, 0, 0, 2), ",": (0, 0, 0, 2, 2), "!": (2, 2, 2, 0, 2),
+       "'": (2, 2, 0, 0, 0), "-": (0, 0, 7, 0, 0), "+": (0, 2, 7, 2, 0), "=": (0, 7, 0, 7, 0),
+       "?": (7, 1, 2, 0, 2), "/": (1, 1, 2, 4, 4), "%": (5, 1, 2, 4, 5), "(": (1, 2, 2, 2, 1),
+       ")": (4, 2, 2, 2, 4), "*": (7, 5, 7, 0, 0), " ": (0, 0, 0, 0, 0)}
+ANCHO = {":": 1, ".": 1, ",": 1, "!": 1, "'": 1, " ": 2}
+TILDES = {"\u00c1": "A", "\u00c9": "E", "\u00cd": "I", "\u00d3": "O", "\u00da": "U", "\u00dc": "U",
+          "\u00d1": "N", "\u00ba": "*", "\u00b0": "*", "\u00aa": "A", "\u00c7": "C"}
+
+
+def limpiar(t):
+    """Mayusculas sin tildes; lo que no tiene letra pasa a espacio."""
+    t = t.upper()
+    return "".join(c if c in PEQ else TILDES.get(c, " ") for c in t)
 
 
 def ancho_peq(t):
-    return sum(1 if c in ": " else 3 for c in t) + len(t) - 1
+    return sum(ANCHO.get(c, 3) for c in t) + len(t) - 1
 
 
 def texto(t, x, c, y=2):
-    """Texto 3x5; ':' y ' ' ocupan 1 columna. Devuelve la x final."""
+    """Texto 3x5 en color c (sin escalar); devuelve la x final."""
     c = color(c)
     for ch in t:
-        g = PEQ.get(ch, PEQ[" "])
-        w = 1 if ch in ": " else 3
-        for f in range(5):
-            for k in range(w):
-                if g[f] & (1 << (w - 1 - k if w == 3 else 1)):
-                    pon(x + k, y + f, c)
+        w = ANCHO.get(ch, 3)
+        if -3 < x < W:
+            g = PEQ.get(ch, PEQ[" "])
+            for f in range(5):
+                for k in range(w):
+                    if g[f] & ((4 >> k) if w == 3 else 2):
+                        pon(x + k, y + f, c)
         x += w + 1
     return x
 
@@ -290,6 +308,112 @@ def pinta_hora():
     mostrar()
 
 
+# ---------- mensajes de la domotica (POST /api/notify, como una Awtrix) ----------
+srv = None
+cola = []
+MAX_COLA = 4
+
+
+def abrir_servidor():
+    global srv
+    try:
+        srv = socket.socket()
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind(socket.getaddrinfo("0.0.0.0", 80)[0][-1])
+        srv.listen(2)
+        srv.setblocking(False)
+    except Exception as e:
+        print("[HTTP]", e)
+        srv = None
+
+
+def responder(cl, codigo, cuerpo):
+    cl.send(("HTTP/1.1 %d %s\r\nContent-Type: application/json\r\nConnection: close\r\n"
+             "Content-Length: %d\r\n\r\n" % (codigo, "OK" if codigo == 200 else "Error", len(cuerpo))).encode())
+    cl.send(cuerpo.encode())
+
+
+def atender():
+    if not srv:
+        return
+    try:
+        cl, _ = srv.accept()
+    except OSError:
+        return
+    try:
+        cl.settimeout(3)
+        raw = b""
+        while b"\r\n\r\n" not in raw and len(raw) < 2048:
+            c = cl.recv(256)
+            if not c:
+                break
+            raw += c
+        i = raw.find(b"\r\n\r\n")
+        cab, cuerpo = (raw[:i], raw[i + 4:]) if i >= 0 else (raw, b"")
+        largo = 0
+        for l in cab.split(b"\r\n"):
+            if l.lower().startswith(b"content-length:"):
+                largo = int(l.split(b":")[1].strip() or 0)
+        while len(cuerpo) < min(largo, 1500):
+            c = cl.recv(256)
+            if not c:
+                break
+            cuerpo += c
+        linea = cab.split(b"\r\n")[0]
+        if linea.startswith(b"POST /api/notify") or linea.startswith(b"POST /api/custom"):
+            d = json.loads(cuerpo or b"{}")
+            t = d.get("text", "")
+            if isinstance(t, list):        # Awtrix: [{"t": "...", "c": "..."}...]
+                t = "".join(x.get("t", "") for x in t if isinstance(x, dict))
+            if t and len(cola) < MAX_COLA:
+                cola.append((str(t)[:120], d.get("color"), d.get("repeat", 1)))
+            responder(cl, 200, '{"success": true}')
+        elif linea.startswith(b"GET /api/version"):
+            responder(cl, 200, json.dumps({"tipo": "8266", "version": VERSION, "ip": sta.ifconfig()[0],
+                                           "libre": gc.mem_free(), "partido": actual}))
+        else:
+            responder(cl, 404, '{"success": false}')
+    except Exception as e:
+        print("[HTTP]", e)
+    finally:
+        cl.close()
+        gc.collect()
+
+
+def leer_color(c):
+    try:
+        if isinstance(c, str) and c.startswith("#") and len(c) == 7:
+            return (int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16))
+        if isinstance(c, (list, tuple)) and len(c) == 3:
+            return (int(c[0]), int(c[1]), int(c[2]))
+        if isinstance(c, int):
+            return ((c >> 16) & 255, (c >> 8) & 255, c & 255)
+    except Exception:
+        pass
+    return BLANCO
+
+
+def mensaje(t, c, rep):
+    """El texto entra por la derecha y sale por la izquierda, 'repeat' veces (max 5)."""
+    t = limpiar(t)
+    w = ancho_peq(t)
+    c = leer_color(c)
+    try:
+        rep = max(1, min(int(rep or 1), 5))
+    except (TypeError, ValueError):
+        rep = 1
+    print("[MENSAJE]", t)
+    for _ in range(rep):
+        for x in range(W, -w - 1, -1):
+            borrar()
+            texto(t, x, c)
+            mostrar()
+            atender()
+            time.sleep_ms(45)
+    borrar()
+    mostrar()
+
+
 wdt = None
 
 
@@ -299,7 +423,10 @@ def dormir(seg):
     while time.ticks_diff(fin, time.ticks_ms()) > 0:
         if wdt:
             wdt.feed()
-        time.sleep_ms(200)
+        atender()
+        if cola:
+            return            # hay mensaje: se muestra ya
+        time.sleep_ms(100)
 
 
 # ---------- bucle ----------
@@ -307,6 +434,7 @@ borrar()
 centrado("8266", AZUL)
 mostrar()
 wifi()
+abrir_servidor()
 poner_hora()
 bajar_lista()
 t_lista = time.time()
@@ -330,6 +458,8 @@ while True:
                 mostrar()
                 dormir(5)
                 continue
+        while cola:
+            mensaje(*cola.pop(0))
         if time.time() - t_lista > LISTA_SEG:
             t_lista = time.time()
             bajar_lista()
