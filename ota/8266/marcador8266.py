@@ -3,9 +3,12 @@
 # con su clave) y pinta en la matriz 32x8 el reloj (cuarto + mm:ss) y el marcador. Sin
 # mensajes, sin OTA y sin web: para cambiar algo, por USB (config.json).
 # config.json: {"wifi": [{"ssid","password"}...], "relay": "http://host", "clave": "...",
-#   "brillo": 0.1, "pin": 4, "ancho": 32, "leds_fila": 33, "derecha": true, "girada": false}
-#   leds_fila: LEDs por fila de la tira en zigzag (33 en la Awtrix: el de la curva no se ve);
-#   derecha: la primera fila empieza por la derecha; girada: matriz montada al reves.
+#   "brillo": 0.1, "pin": 4, "ancho": 32, "mapa": "8x8", "girada": false}
+#   mapa "8x8" (por defecto): modulos 8x8 encadenados de izquierda a derecha, cada uno con
+#     sus filas de izquierda a derecha sin zigzag (como la 24x8, con 4 modulos);
+#   mapa "zigzag": tira en zigzag de la Awtrix, con "leds_fila" (33: el de la curva no se ve)
+#     y "derecha" (la primera fila empieza por la derecha);
+#   girada: matriz montada al reves.
 import gc
 import json
 import socket
@@ -19,7 +22,8 @@ with open("config.json") as _f:
     CFG = json.load(_f)
 W = CFG.get("ancho", 32)
 H = 8
-FILA = CFG.get("leds_fila", W)
+MAPA = CFG.get("mapa", "8x8")
+FILA = CFG.get("leds_fila", W) if MAPA == "zigzag" else W
 N = FILA * H
 np = neopixel.NeoPixel(machine.Pin(CFG.get("pin", 4)), N)
 BRILLO = CFG.get("brillo", 0.1)
@@ -36,6 +40,8 @@ NUESTROS = ("SERRACINES", "COSLADA")
 def idx(x, y):
     if GIRADA:
         x, y = W - 1 - x, H - 1 - y
+    if MAPA == "8x8":
+        return (x // 8) * 64 + y * 8 + x % 8
     fila = y * FILA
     if (y % 2 == 0) == DERECHA:
         return fila + W - 1 - x
