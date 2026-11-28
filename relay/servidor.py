@@ -4,7 +4,11 @@ TC001 y las placas sin memoria para TLS puedan leer).
   GET  /partidos.json?k=<clave>, /m/<notif>.json?k=<clave>  -> lo ultimo publicado
   PUT  /<ruta>.json  cabecera X-Token                       -> lo publica (solo el recolector)
 Leer exige la clave de la pantalla (?k= o cabecera X-Key) si claves.json existe:
-  {"obligatoria": true, "claves": {"<clave>": "nombre de la pantalla", ...}}
+  {"obligatoria": true, "claves": {"<clave>": "nombre de la pantalla", ...},
+   "equipos": {"<clave>": ["SERRACINES FEMENINO", ...]}}
+"equipos" es opcional: la pantalla con esa clave solo recibe en /partidos.json los partidos en
+los que juega alguno de esos equipos (local o visitante, sin distinguir mayusculas). Asi una
+pantalla regalada a un equipo sigue solo sus partidos.
 Sin clave valida responde 404 (como si no hubiera nada). Se relee al cambiar el fichero.
 Maximo LIMITE_MIN lecturas por minuto y por IP (429 si se pasa).
 token.txt y claves.json nunca van al repo.
@@ -26,7 +30,7 @@ DATOS = {}            # ruta -> bytes (en memoria; tambien a disco para sobreviv
 GUARDA = os.path.join(DIR, "datos")
 _lock = threading.Lock()
 CLAVES_FICH = os.path.join(DIR, "claves.json")
-_claves = {"mtime": None, "obligatoria": False, "claves": {}}
+_claves = {"mtime": None, "obligatoria": False, "claves": {}, "equipos": {}}
 LIMITE_MIN = 120
 _uso = {}             # ip -> [minuto, peticiones]
 
@@ -36,16 +40,31 @@ def claves():
     try:
         mt = os.path.getmtime(CLAVES_FICH)
     except OSError:
-        _claves.update(mtime=None, obligatoria=False, claves={})
+        _claves.update(mtime=None, obligatoria=False, claves={}, equipos={})
         return _claves
     if mt != _claves["mtime"]:
         try:
             d = json.load(open(CLAVES_FICH))
             _claves.update(mtime=mt, obligatoria=bool(d.get("obligatoria", True)),
-                           claves=dict(d.get("claves", {})))
+                           claves=dict(d.get("claves", {})),
+                           equipos={k: [e.upper() for e in ([v] if isinstance(v, str) else v)]
+                                    for k, v in d.get("equipos", {}).items()})
         except Exception as e:
             sys.stderr.write("claves.json no valido: %s\n" % e)
     return _claves
+
+
+def filtrar(d, equipos):
+    """La lista de partidos dejando solo los de esos equipos."""
+    try:
+        datos = json.loads(d)
+        datos["partidos"] = [p for p in datos.get("partidos", [])
+                             if any(e in (p.get("local", "") + "|" + p.get("visit", "")).upper()
+                                    for e in equipos)]
+        return json.dumps(datos, ensure_ascii=False).encode()
+    except Exception as e:
+        sys.stderr.write("filtro: %s\n" % e)
+        return d
 
 
 def demasiadas(ip):
@@ -89,14 +108,15 @@ class H(BaseHTTPRequestHandler):
         if demasiadas(self.client_address[0]):
             return self._resp(429, b'{"error":"despacio"}')
         c = claves()
-        if c["obligatoria"]:
-            k = (parse_qs(partes.query).get("k") or [self.headers.get("X-Key") or ""])[0]
-            if k not in c["claves"]:
-                return self._resp(404, b'{"error":"no"}')
+        k = (parse_qs(partes.query).get("k") or [self.headers.get("X-Key") or ""])[0]
+        if c["obligatoria"] and k not in c["claves"]:
+            return self._resp(404, b'{"error":"no"}')
         with _lock:
             d = DATOS.get(ruta)
         if d is None:
             return self._resp(404, b'{"error":"no"}')
+        if ruta == "/partidos.json" and k in c["equipos"]:
+            d = filtrar(d, c["equipos"][k])
         self._resp(200, d)
 
     do_HEAD = do_GET

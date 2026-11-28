@@ -133,6 +133,78 @@
    "notif": "409853",
    "buscar": "serracines",
    "skip": 100
+  },
+  {
+   "ts": 1797280200,
+   "fecha": "14/12/2026",
+   "hora": "21:30",
+   "local": "BAR EL RINCON DE FUENCARRAL",
+   "visit": "SERRACINES FEMENINO",
+   "campo": "EST. LAS TABLAS 1",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409856",
+   "buscar": "serracines",
+   "skip": 100
+  },
+  {
+   "ts": 1799695800,
+   "fecha": "11/01/2027",
+   "hora": "20:30",
+   "local": "SERRACINES FEMENINO",
+   "visit": "MENESIANO",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409858",
+   "buscar": "serracines",
+   "skip": 150
+  },
+  {
+   "ts": 1800304200,
+   "fecha": "18/01/2027",
+   "hora": "21:30",
+   "local": "IN BLACK",
+   "visit": "SERRACINES FEMENINO",
+   "campo": "EST. LAS TABLAS 1",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409861",
+   "buscar": "serracines",
+   "skip": 150
+  },
+  {
+   "ts": 1800905400,
+   "fecha": "25/01/2027",
+   "hora": "20:30",
+   "local": "SERRACINES FEMENINO",
+   "visit": "BASKETEMATAS",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409865",
+   "buscar": "serracines",
+   "skip": 150
+  },
+  {
+   "ts": 1801510200,
+   "fecha": "01/02/2027",
+   "hora": "20:30",
+   "local": "SERRACINES FEMENINO",
+   "visit": "NUEVAS GLORIAS",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409868",
+   "buscar": "serracines",
+   "skip": 150
+  },
+  {
+   "ts": 1802118600,
+   "fecha": "08/02/2027",
+   "hora": "21:30",
+   "local": "SERRACINES FEMENINO",
+   "visit": "BAR EL RINCON DE FUENCARRAL",
+   "campo": "EST. LAS TABLAS 2",
+   "categoria": "FreeBasket O35 Femenina",
+   "notif": "409871",
+   "buscar": "serracines",
+   "skip": 200
   }
  ]
 }
