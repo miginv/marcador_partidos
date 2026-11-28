@@ -7,8 +7,9 @@
 import time
 import modo_fbm
 import my_display
+import my_shared
 import orientacion
-orientacion.aplicar(my_display.LED_MAP_17)   # mapa de la Awtrix girado si la pantalla va girada
+orientacion.aplicar(my_display.LED_MAP_4 if my_shared.MATRIX_TILES == 4 else my_display.LED_MAP_17)   # mapa de la Awtrix girado si la pantalla va girada
 import my_network
 import my_server
 import json

@@ -5,7 +5,18 @@
 #   girada    -> 180 grados (por defecto)
 #   vertical  -> solo se invierten las filas (otra forma de cablear la entrada abajo a la izq.)
 #   normal    -> como la Awtrix original
+# Pantallas de 4 matrices 8x8 (my_shared.MATRIX_TILES = 4): el mapa es el de modulos 8x8
+# encadenados de izquierda a derecha, filas sin zigzag (LED = x//8*64 + y*8 + x%8), y por
+# defecto van "normal"; orientacion.txt "girada" o "vertical" tambien vale para ellas.
 GIRADA = True       # compatibilidad: sin orientacion.txt, girada
+
+
+def _tiles4():
+    try:
+        import my_shared
+        return getattr(my_shared, "MATRIX_TILES", 17) == 4
+    except Exception:
+        return False
 
 
 def modo():
@@ -16,12 +27,14 @@ def modo():
             return m
     except Exception:
         pass
-    return "girada" if GIRADA else "normal"
+    return "girada" if GIRADA and not _tiles4() else "normal"
 
 
 def aplicar(mapa):
     """Cambia en el sitio un mapa [fila][x] -> indice LED (asi vale para quien ya lo tenga
     importado)."""
+    if _tiles4():
+        mapa[:] = [[(x // 8) * 64 + y * 8 + x % 8 for x in range(32)] for y in range(8)]
     m = modo()
     if m == "girada":
         mapa[:] = [list(reversed(f)) for f in reversed(mapa)]
