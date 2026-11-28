@@ -1,67 +1,7 @@
 {
- "actualizado": "2026-11-27 13:00",
+ "actualizado": "2026-11-28 13:00",
  "nota": "Borra o anade entradas libremente. La placa usa notif+buscar+skip para localizar el partido; ts = inicio en epoch UTC (segundos).",
  "partidos": [
-  {
-   "ts": 1795797900,
-   "fecha": "27/11/2026",
-   "hora": "17:45",
-   "local": "RICOPIA FUNBAL ALCALA CBJA \"A\"",
-   "visit": "C.B. COSLADA",
-   "campo": "SAN GABRIEL, COLEGIO",
-   "categoria": "Infantil Masculino LIGA AHORRAMAS - PLATA/BRONCE",
-   "notif": "376394",
-   "buscar": "coslada",
-   "skip": 650
-  },
-  {
-   "ts": 1795804200,
-   "fecha": "27/11/2026",
-   "hora": "19:30",
-   "local": "RICOPIA FUNBAL ALCALA CBJA \"B\"",
-   "visit": "SAN AGUSTIN MADRID",
-   "campo": "MIGUEL HERNANDEZ, PABELLON COLEGIO",
-   "categoria": "Cadete Femenino LIGA AHORRAMAS - PLATA/BRONCE",
-   "notif": "375617",
-   "buscar": "alcala",
-   "skip": 1500
-  },
-  {
-   "ts": 1795804200,
-   "fecha": "27/11/2026",
-   "hora": "19:30",
-   "local": "RICOPIA FUNBAL ALCALA CBJA \"A\"",
-   "visit": "C.B. LAS ROZAS \"A\"",
-   "campo": "SAN GABRIEL, COLEGIO",
-   "categoria": "Infantil Femenino LIGA AHORRAMAS - ORO",
-   "notif": "375943",
-   "buscar": "alcala",
-   "skip": 1500
-  },
-  {
-   "ts": 1795810500,
-   "fecha": "27/11/2026",
-   "hora": "21:15",
-   "local": "BASKET TORREJON \"A\"",
-   "visit": "SPANISH BASKETBALL ACADEMY A",
-   "campo": "JAVI LIMONES, PABELLON (PISTA CENTRAL)",
-   "categoria": "Junior Masculino LIGA AHORRAMAS - ORO",
-   "notif": "375318",
-   "buscar": "spanish basketball",
-   "skip": 100
-  },
-  {
-   "ts": 1795854600,
-   "fecha": "28/11/2026",
-   "hora": "09:30",
-   "local": "COSLADA C.B. SERRACINES",
-   "visit": "PATROCINIO SAN JOSE",
-   "campo": "C.E.I.P. SERRACINES, PABELLON",
-   "categoria": "Alv Mas 2ºaño LIGA MARCO ALDANY - ORO",
-   "notif": "394187",
-   "buscar": "serracines",
-   "skip": 100
-  },
   {
    "ts": 1795867200,
    "fecha": "28/11/2026",
