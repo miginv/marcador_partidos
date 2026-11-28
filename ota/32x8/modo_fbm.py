@@ -48,6 +48,34 @@ def _clave(p):
     return p.get("notif") or (p.get("fecha", "") + p.get("hora", ""))
 
 
+POSPUESTOS_FILE = "pospuestos.json"
+POSPONER_MIN = 10            # partido no encontrado: se vuelve a mensajes y se reintenta a los 10 min
+
+
+def _pospuestos():
+    try:
+        with open(POSPUESTOS_FILE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def pospuesto(p):
+    """True si el partido no se encontro hace menos de POSPONER_MIN (no se vuelve a por el)."""
+    return _pospuestos().get(_clave(p), 0) > time.time() + EPOCH_2000
+
+
+def posponer(p):
+    ahora = time.time() + EPOCH_2000
+    d = {k: v for k, v in _pospuestos().items() if v > ahora}
+    d[_clave(p)] = ahora + POSPONER_MIN * 60
+    try:
+        with open(POSPUESTOS_FILE, "w") as f:
+            json.dump(d, f)
+    except Exception as e:
+        print("[MODO] no se pudo posponer:", e)
+
+
 def partido_cercano():
     """Partido pendiente que empieza en ANTES_MIN min o menos, o ya en juego. None si no
     hay o si la placa aun no tiene hora."""
@@ -66,7 +94,7 @@ def partido_cercano():
     ahora = time.time() + EPOCH_2000
     for p in lista:
         ts = p.get("ts")
-        if not ts or _clave(p) in hechos:
+        if not ts or _clave(p) in hechos or pospuesto(p):
             continue
         if ts - ANTES_MIN * 60 <= ahora <= ts + MAX_MIN * 60:
             return p

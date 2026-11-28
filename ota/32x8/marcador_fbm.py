@@ -495,7 +495,7 @@ print("[BOOT] partidos:", len(PARTIDOS), "hechos:", len(HECHOS))
 def siguiente():
     """Primer partido (por hora) no terminado ni pasado de MAX_MIN."""
     for q in PARTIDOS:
-        if clave(q) in HECHOS:
+        if clave(q) in HECHOS or modo_fbm.pospuesto(q):
             continue
         m = _min_desde_inicio(q)
         if m is not None and m > MAX_MIN:
@@ -556,13 +556,19 @@ while True:
             fijar_colores(p)
             gc.collect()
             if HEX_ID is None:
-                my_display.draw_centered_text("NOG", 3, (255, 100, 0))
-                print("[DISPLAY] NOG -", p.get("local", ""), "no encontrado")
+                # sin "NOG" en pantalla: con modo mensajes se vuelve al reloj y se reintenta
+                # a los POSPONER_MIN; pasados NOG_MIN desde el inicio se da por perdido
+                print("[LOOP] no encontrado:", p.get("local", ""), "vs", p.get("visit", ""))
                 _m = _min_desde_inicio(p)
                 if _m is not None and _m > NOG_MIN:
-                    print("[LOOP] NOG tras", _m, "min -> siguiente")
+                    print("[LOOP] sin encontrar tras", _m, "min -> siguiente")
                     marcar_hecho(p)
                     continue
+                if _hora_ok and modo_fbm.hay_mensajes():
+                    modo_fbm.posponer(p)
+                    my_display.clear()
+                    modo_fbm.cambiar("mensajes")
+                my_display.clear()
                 my_display.hold(POLL_ESPERA)
                 continue
 
